@@ -57,9 +57,7 @@ public class Bootstrap {
 
 //        System.out.println(JSON.toJSONString(DateProcessUtils.handleRangeDate("2020-01-01 08:12:13","2020-01-01 08:00:00")));
 
-
 //        generateVehicleDataByFlink();
-
 
 
 

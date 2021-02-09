@@ -37,8 +37,8 @@ import java.util.Map;
  */
 public class PlateNoMapRedisByFlink {
     public static void main(String[] args) throws Exception {
-//        plateNoMapBitindex();
-        plateNoMapBitindexByFlinksql();
+        plateNoMapBitindex();
+//        plateNoMapBitindexByFlinksql();
     }
 
     /**
@@ -78,7 +78,7 @@ public class PlateNoMapRedisByFlink {
                 tableProperties.put("connector.type", "hbase");
                 tableProperties.put("connector.version", "1.4.3");
                 tableProperties.put("connector.property-version", "1");
-                tableProperties.put("connector.table-name", "VehicleEntity");
+                tableProperties.put("connector.table-name", "VehicleTrajectoryEntity");
                 tableProperties.put("connector.zookeeper.quorum", "itserver21,itserver22,itserver23");
                 tableProperties.put("connector.zookeeper.znode.parent", "/hbase-unsecure");
                 tableProperties.put("connector.write.buffer-flush.max-size", "10mb");
@@ -92,21 +92,12 @@ public class PlateNoMapRedisByFlink {
 
             @Override
             public TableSchema setTableSchema() {
-//                TableSchema schema =
-//                        TableSchema.builder()
-//                                .field(
-//                                        "uvpv",
-//                                        DataTypes.ROW(
-//                                                DataTypes.FIELD("uv", DataTypes.STRING()),
-//                                                DataTypes.FIELD("pv", DataTypes.STRING())))
-//                                .field("rowkey", DataTypes.BIGINT())
-//                                .build();
                 TableSchema schema =
                         TableSchema.builder()
                                 .field(
                                         "fm",
                                         DataTypes.ROW(
-                                                DataTypes.FIELD("c10", DataTypes.STRING())))
+                                                DataTypes.FIELD("c6", DataTypes.STRING())))
                                 .field("rowkey", DataTypes.STRING())
                                 .build();
                 return schema;

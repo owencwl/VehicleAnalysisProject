@@ -128,13 +128,14 @@ abstract class AbstractTableInputFormat<T> extends RichInputFormat<T, TableInput
 
 		logSplitInfo("opening", split);
 
-		Filter filter1 = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator("020210101*"));
-		LOG.info("flink_use_filter");
-		scan.setFilter(filter1);
+//		Filter filter1 = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator("020210101*"));
+//		LOG.info("flink_use_filter");
+//		scan.setFilter(filter1);
+
 		// set scan range
-//		currentRow = split.getStartRow();
-//		scan.setStartRow(currentRow);
-//		scan.setStopRow(split.getEndRow());
+		currentRow = split.getStartRow();
+		scan.setStartRow(currentRow);
+		scan.setStopRow(split.getEndRow());
 
 //		Filter filter = new RandomRowFilter((float)0.0005); //
 //		scan.setFilter(filter);
@@ -224,6 +225,12 @@ abstract class AbstractTableInputFormat<T> extends RichInputFormat<T, TableInput
 		if (keys == null || keys.getFirst() == null || keys.getFirst().length == 0) {
 			throw new IOException("Expecting at least one region.");
 		}
+//		Filter filter = new RandomRowFilter((float) 0.0005); //
+//		scan.setFilter(filter);
+//		Filter filter1 = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator("020210101*"));
+//		LOG.info("flink_use_filter");
+//		scan.setFilter(filter1);
+
 		final byte[] startRow = scan.getStartRow();
 		final byte[] stopRow = scan.getStopRow();
 		final boolean scanWithNoLowerBound = startRow.length == 0;
