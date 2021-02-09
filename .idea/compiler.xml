@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="FakePlateVehiclesAnalysis" />
+        <module name="common" />
+        <module name="FollowVehicleAnalysis" />
+        <module name="GenerateVehicleData" />
+        <module name="RegionalCollisionAnalysis" />
+        <module name="IntoUrbanAnalysis" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>
