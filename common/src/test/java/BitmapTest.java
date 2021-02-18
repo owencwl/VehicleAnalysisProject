@@ -63,8 +63,18 @@ public class BitmapTest {
 //        for(int i : rr) {
 //            System.out.println(i);
 //        }
+    }
 
+    @Test
+    public  void RoaringBitmapTest() throws Exception {
+        RoaringBitmap rr1 = RoaringBitmap.bitmapOf(1,2,3,1000,1,3);
+        RoaringBitmap rr2 = RoaringBitmap.bitmapOf(3,5,6,9,5,6,3,3,1000);
+
+
+        System.out.println(rr1 + " "+ rr2);
+        System.out.println("intersection:"+RoaringBitmap.and(rr1,rr2));
 
 
     }
+
 }

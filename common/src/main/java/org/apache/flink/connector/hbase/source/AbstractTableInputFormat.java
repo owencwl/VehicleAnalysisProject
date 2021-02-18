@@ -136,7 +136,7 @@ abstract class AbstractTableInputFormat<T> extends RichInputFormat<T, TableInput
 		currentRow = split.getStartRow();
 		scan.setStartRow(currentRow);
 		scan.setStopRow(split.getEndRow());
-
+		LOG.info(String.format("setStartRow: %s,setStopRow: %s ",currentRow,split.getEndRow()));
 //		Filter filter = new RandomRowFilter((float)0.0005); //
 //		scan.setFilter(filter);
 		resultScanner = table.getScanner(scan);
