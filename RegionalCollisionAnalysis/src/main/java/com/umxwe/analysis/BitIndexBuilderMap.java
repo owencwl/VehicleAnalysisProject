@@ -89,6 +89,8 @@ public class BitIndexBuilderMap extends RichMapFunction<Row, Tuple3<String, Stri
             }
             LOG.info("plateNo[{}]的bitIndex生成结束, bitIndex: {}", plateNo, bitIndexStr);
         }
+
+        LOG.info("plateNo[{}] map to bitIndex: {}", plateNo, bitIndexStr);
         return new Tuple3<>(plateNo, "map", Integer.valueOf(bitIndexStr));
     }
 

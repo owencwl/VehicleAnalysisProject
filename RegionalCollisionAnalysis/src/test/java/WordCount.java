@@ -8,11 +8,11 @@ import java.io.Serializable;
  */
 
 public  class WordCount implements Serializable {
-    public Integer number;
+    public int number;
     public String word;
-    public Integer frequency;
+    public int frequency;
 
-    public WordCount(Integer number, String word, Integer frequency) {
+    public WordCount(int number, String word, int frequency) {
         this.number = number;
         this.word = word;
         this.frequency = frequency;
@@ -22,7 +22,7 @@ public  class WordCount implements Serializable {
         return number;
     }
 
-    public void setNumber(Integer number) {
+    public void setNumber(int number) {
         this.number = number;
     }
 
@@ -38,7 +38,7 @@ public  class WordCount implements Serializable {
         return frequency;
     }
 
-    public void setFrequency(Integer frequency) {
+    public void setFrequency(int frequency) {
         this.frequency = frequency;
     }
 }

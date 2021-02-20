@@ -21,44 +21,6 @@
             </plugin>
         </plugins>
     </build>
-    <properties>
-        <hadoop.version>3.1.1</hadoop.version>
-        <hbase.version>2.0.2</hbase.version>
-    </properties>
 
-
-    <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.apache.phoenix</groupId>-->
-<!--            <artifactId>phoenix-core</artifactId>-->
-<!--            <version>5.0.0-HBase-2.0</version>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hbase</groupId>-->
-<!--            <artifactId>hbase-client</artifactId>-->
-<!--            <version>${hbase.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-common</artifactId>-->
-<!--            <version>${hadoop.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-client</artifactId>-->
-<!--            <version>${hadoop.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.hadoop</groupId>-->
-<!--            <artifactId>hadoop-hdfs</artifactId>-->
-<!--            <version>${hadoop.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.roaringbitmap</groupId>-->
-<!--            <artifactId>RoaringBitmap</artifactId>-->
-<!--            <version>0.9.0</version>-->
-<!--        </dependency>-->
-    </dependencies>
 
 </project>

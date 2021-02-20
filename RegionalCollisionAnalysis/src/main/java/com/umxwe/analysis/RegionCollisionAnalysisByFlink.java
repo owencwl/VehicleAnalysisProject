@@ -85,18 +85,22 @@ public class RegionCollisionAnalysisByFlink {
         Table table = DataSetConversionUtil.toTable(tEnv, input, rowTypeInfo.getFieldNames(), rowTypeInfo.getFieldTypes());
         DataSet<Row> pvDataSet = DataSetConversionUtil.fromTable(table, tEnv);
         //map bitindex
-        pvDataSet.map(new BitIndexBuilderMap()).groupBy(1).reduceGroup(new RichGroupReduceFunction<Tuple3<String, String, Integer>, Object>() {
-            @Override
-            public void reduce(Iterable<Tuple3<String, String, Integer>> values, Collector<Object> out) throws Exception {
-
-            }
-        }).print();
+        pvDataSet.map(new BitIndexBuilderMap())
 
 
+//                .groupBy(1).reduceGroup(new RichGroupReduceFunction<Tuple3<String, String, Integer>, Object>() {
+//            @Override
+//            public void reduce(Iterable<Tuple3<String, String, Integer>> values, Collector<Object> out) throws Exception {
+//
+//            }
+//        })
+                .print();
 
 
 
-        pvDataSet.print();
+
+
+//        pvDataSet.print();
 
     }
 }
