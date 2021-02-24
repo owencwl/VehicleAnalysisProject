@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.ByteBuffer;
 
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
@@ -20,12 +21,14 @@ public class BitmapUtil {
 //                ByteArrayInputStream bai = new ByteArrayInputStream(arr);
 //             ObjectInputStream inputStream = new ObjectInputStream(bai)
         {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.write(arr);
-            oos.flush();
-            ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
-            roaringBitmap.deserialize(inputStream);
+//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//            ObjectOutputStream oos = new ObjectOutputStream(baos);
+//            oos.write(arr);
+//            oos.flush();
+//            ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray()));
+//            roaringBitmap.deserialize(inputStream);
+            roaringBitmap.deserialize(ByteBuffer.wrap(arr));
+
         } catch (IOException e) {
             SLOG.error("deserializeBitmap error", e);
         }

@@ -89,13 +89,13 @@ public class CollisionCarDetectQueryByES {
 //            .reduceScript(reduce);
 
     BitmapAggregationBuilder bitmapAggregationBuilder=new BitmapAggregationBuilder("bitmapAggregation");
-    bitmapAggregationBuilder.field("plateNo");
+    bitmapAggregationBuilder.field("shotTime");
     //AggregationBuilders.terms("GroupbydeviceID").field("deviceID")
 //.subAggregation(bitmapAggregationBuilder)
 //    AggregationBuilders.count("count").field("plateNo")
     ssb.size(0);
-//    ssb.aggregation(AggregationBuilders.terms("GroupbydeviceID").field("deviceID").subAggregation(bitmapAggregationBuilder));
-    ssb.aggregation(bitmapAggregationBuilder);
+    ssb.aggregation(AggregationBuilders.terms("GroupbydeviceID").field("deviceID").subAggregation(bitmapAggregationBuilder));
+//    ssb.aggregation(bitmapAggregationBuilder);
     System.out.println(ssb.toString());
     SearchRequest searchRequest = new SearchRequest();
     searchRequest.source(ssb);

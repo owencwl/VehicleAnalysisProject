@@ -66,6 +66,8 @@ public class BitmapAggregator extends NumericMetricsAggregator.SingleValue {
     public BitmapAggregator(String name, ValuesSourceConfig valuesSourceConfig, SearchContext searchContext, Aggregator aggregator, Map<String, Object> stringObjectMap) throws IOException {
         super(name,searchContext,aggregator,stringObjectMap);
         this.format =valuesSourceConfig.format();
+        valuesSourceConfig.fieldType();
+        valuesSourceConfig.valueSourceType();
         this.valuesSource = valuesSourceConfig.hasValues()? (ValuesSource.Bytes) valuesSourceConfig.getValuesSource() :null;
         if (valuesSource != null) {
             sums = context.bigArrays().newObjectArray(1);
