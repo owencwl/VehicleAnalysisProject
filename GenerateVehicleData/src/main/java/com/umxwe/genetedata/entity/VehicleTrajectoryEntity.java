@@ -78,6 +78,7 @@ public class VehicleTrajectoryEntity {
     private String rowKey;
     private double shotPlaceLatitude;//抓拍地点纬度
     private double shotPlaceLongitude;//抓拍地点经度
+    private String location;//"维度,经度"字符串，用于es中
 
 
     public Map<String, Object> toMap() {
@@ -101,7 +102,7 @@ public class VehicleTrajectoryEntity {
         vehiclemap.put("rowKey",this.getRowKey());
         vehiclemap.put("shotPlaceLatitude",this.getShotPlaceLatitude());
         vehiclemap.put("shotPlaceLongitude",this.getShotPlaceLongitude());
-
+        vehiclemap.put("location",this.getShotPlaceLatitude()+","+this.getShotPlaceLongitude());
         return vehiclemap;
     }
 
@@ -122,8 +123,13 @@ public class VehicleTrajectoryEntity {
         rand.getTime();
 //        this.setShotTime(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(rand.toLocalDateTime()));
         this.setShotTime(rand.getTime());
-        this.setShotPlaceLatitude(randomLonLat("Lat"));
-        this.setShotPlaceLongitude(randomLonLat("Lon"));
+        double lat=randomLonLat("Lat");
+        double lon=randomLonLat("Lon");
+
+        this.setShotPlaceLatitude(lat);
+        this.setShotPlaceLongitude(lon);
+        this.setLocation(lat+","+lon);
+
     }
     /**
      * @Title: randomLonLat
@@ -295,5 +301,11 @@ public class VehicleTrajectoryEntity {
         this.vehicleColorDesc = vehicleColorDesc;
     }
 
+    public String getLocation() {
+        return location;
+    }
 
+    public void setLocation(String location) {
+        this.location = location;
+    }
 }

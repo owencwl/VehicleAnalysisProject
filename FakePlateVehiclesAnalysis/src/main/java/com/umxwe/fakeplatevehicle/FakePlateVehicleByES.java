@@ -17,8 +17,6 @@ import org.elasticsearch.search.aggregations.PipelineAggregatorBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.metrics.CardinalityAggregationBuilder;
 import org.elasticsearch.search.aggregations.metrics.ParsedCardinality;
-import org.elasticsearch.search.aggregations.metrics.ParsedScriptedMetric;
-import org.elasticsearch.search.aggregations.metrics.ScriptedMetricAggregationBuilder;
 import org.elasticsearch.search.aggregations.pipeline.BucketSelectorPipelineAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -106,6 +104,7 @@ public class FakePlateVehicleByES {
         fields.add("shotTime");
         fields.add("location");
         UmxDistanceAggregationBuilder umxDistanceAggregationBuilder=new UmxDistanceAggregationBuilder("speed").fields(fields);
+
         ssb.aggregation(AggregationBuilders.terms("GroupbyPlateNo").field("plateNo")
                 .subAggregation(color).subAggregation(clas).subAggregation(brand)
 //                .subAggregation(interval)

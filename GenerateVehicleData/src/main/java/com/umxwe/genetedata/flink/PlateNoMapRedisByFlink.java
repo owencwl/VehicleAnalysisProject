@@ -55,8 +55,17 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.http.HttpHost;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.Requests;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexRequest;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.redisson.Redisson;
 import org.redisson.api.*;
@@ -65,6 +74,7 @@ import org.redisson.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -181,27 +191,28 @@ public class PlateNoMapRedisByFlink {
                 return JSON.parseObject(value).toJavaObject(VehicleEntity.class);
             }
         });
-        dataStream.countWindowAll(10000).apply(new AllWindowFunction<VehicleEntity, List<VehicleEntity>, GlobalWindow>() {
-            @Override
-            public void apply(GlobalWindow window, Iterable<VehicleEntity> message, Collector<List<VehicleEntity>> out) throws Exception {
-                List<VehicleEntity> putList = new ArrayList<>();
-                for (VehicleEntity value : message) {
-                    putList.add(value);
-                }
-                out.collect(putList);
-            }
-            //to hbase
-        }).addSink(new HBaseSinkFunction());
 
-        dataStream.map(new RedisMapBuilderFunction())
-                .keyBy(new KeySelector<Tuple3<String, String, Object>, String>() {
-                    @Override
-                    public String getKey(Tuple3<String, String, Object> value) throws Exception {
-                        return value.f0;
-                    }
-                })
-                .reduce(new RedisMapBuilderReduce())
-                .addSink(new RedisSinkFunction());
+//        dataStream.countWindowAll(10000).apply(new AllWindowFunction<VehicleEntity, List<VehicleEntity>, GlobalWindow>() {
+//            @Override
+//            public void apply(GlobalWindow window, Iterable<VehicleEntity> message, Collector<List<VehicleEntity>> out) throws Exception {
+//                List<VehicleEntity> putList = new ArrayList<>();
+//                for (VehicleEntity value : message) {
+//                    putList.add(value);
+//                }
+//                out.collect(putList);
+//            }
+//            //to hbase
+//        }).addSink(new HBaseSinkFunction());
+//
+//        dataStream.map(new RedisMapBuilderFunction())
+//                .keyBy(new KeySelector<Tuple3<String, String, Object>, String>() {
+//                    @Override
+//                    public String getKey(Tuple3<String, String, Object> value) throws Exception {
+//                        return value.f0;
+//                    }
+//                })
+//                .reduce(new RedisMapBuilderReduce())
+//                .addSink(new RedisSinkFunction());
 
 
         /**
@@ -218,6 +229,9 @@ public class PlateNoMapRedisByFlink {
         httpHosts.add(new HttpHost("10.116.200.23", 9200, "http"));
         httpHosts.add(new HttpHost("10.116.200.25", 9200, "http"));
         httpHosts.add(new HttpHost("10.116.200.26", 9200, "http"));
+
+        //重新运行需要注释这行code，不然会删除索引
+//        createESIndex(httpHosts,"vehicletrajectoryentity");
 
         ElasticsearchSink.Builder<VehicleTrajectoryEntity> esSinkBuilder =
                 new ElasticsearchSink.Builder<>(httpHosts, new ElasticsearchSinkFunction<VehicleTrajectoryEntity>() {
@@ -267,6 +281,96 @@ public class PlateNoMapRedisByFlink {
 
         bsEnv.execute("KafkaSinkToHbaseAndRedis");
 
+    }
+
+    public static void createESIndex( List<HttpHost> httpHosts,String index) throws IOException {
+        RestHighLevelClient client =
+                new RestHighLevelClient( RestClient.builder(httpHosts.toArray(new HttpHost[httpHosts.size()])));
+        boolean recreate = true;
+
+        // delete index
+        if (recreate && client.indices().exists(new GetIndexRequest(index), RequestOptions.DEFAULT)) {
+            DeleteIndexRequest deleteIndex = new DeleteIndexRequest(index);
+            client.indices().delete(deleteIndex, RequestOptions.DEFAULT);
+
+            // mapping config and put
+            XContentBuilder builder = XContentFactory.jsonBuilder();
+            builder.startObject();
+            {
+                builder.startObject("properties");
+                {
+                    builder.startObject("plateNo");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("deviceID");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("shotTime");
+                    {
+                        builder.field("type", "long");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("location");
+                    {
+                        builder.field("type", "geo_point");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("vehicleBrandDesc");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("vehicleClassDesc");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("vehicleColorDesc");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("vehicleBrand");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+
+                    builder.startObject("plateClassDesc");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                    builder.startObject("plateColorDesc");
+                    {
+                        builder.field("type", "keyword");
+                    }
+                    builder.endObject();
+
+                }
+                builder.endObject();
+            }
+            builder.endObject();
+            // create index car
+            CreateIndexRequest createIndex = new CreateIndexRequest(index);
+            createIndex.mapping(index, builder);
+            createIndex.settings(
+                    Settings.builder().put("index.number_of_shards", 5).put("index.number_of_replicas", 1));
+            client.indices().create(createIndex, RequestOptions.DEFAULT);
+        }
     }
 
     /**
