@@ -224,14 +224,15 @@ public class PlateNoMapRedisByFlink {
         //该配置表示批量写入ES时的记录条数
         config.put("bulk.flush.max.actions", "1");
         List<HttpHost> httpHosts = new ArrayList<>();
-        httpHosts.add(new HttpHost("10.116.200.21", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.22", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.23", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.25", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.26", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.21", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.22", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.23", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.25", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.26", 9200, "http"));
+        httpHosts.add(new HttpHost("10.116.200.24", 9200, "http"));
 
         //重新运行需要注释这行code，不然会删除索引
-//        createESIndex(httpHosts,"vehicletrajectoryentity");
+        createESIndex(httpHosts,"carindex");
 
         ElasticsearchSink.Builder<VehicleTrajectoryEntity> esSinkBuilder =
                 new ElasticsearchSink.Builder<>(httpHosts, new ElasticsearchSinkFunction<VehicleTrajectoryEntity>() {
@@ -239,8 +240,8 @@ public class PlateNoMapRedisByFlink {
                         //把流中的对象转化为json格式，写入es中
                         String source = JSON.toJSONString(element);
                         return Requests.indexRequest()
-                                .index("vehicletrajectoryentity")
-                                .type("vehicletrajectoryentity")
+                                .index("carindex")
+                                .type("carindex")
                                 .source(source, XContentType.JSON);
                     }
 

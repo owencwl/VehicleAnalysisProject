@@ -2,7 +2,6 @@ package com.umxwe.common.elastic.distance;
 
 import org.elasticsearch.common.ParseField;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.search.MultiValueMode;
 import org.elasticsearch.search.aggregations.support.ArrayValuesSourceAggregationBuilder;
 import org.elasticsearch.search.aggregations.support.ArrayValuesSourceParser;
 import org.elasticsearch.search.aggregations.support.ValueType;
@@ -20,19 +19,15 @@ import static org.elasticsearch.search.aggregations.support.ArrayValuesSourceAgg
  * @Author owen(umxwe)
  * @Date 2021/2/24
  */
-public class UmxDistanceParser extends ArrayValuesSourceParser.NumericValuesSourceParser {
+public class UmxMaxSpeedParser extends ArrayValuesSourceParser.NumericValuesSourceParser {
 
-    public UmxDistanceParser() {
+    public UmxMaxSpeedParser() {
         super(true);
     }
 
     @Override
     protected ArrayValuesSourceAggregationBuilder<?> createFactory(String aggregationName, ValuesSourceType valuesSourceType, ValueType targetValueType, Map<ParseField, Object> otherOptions) {
-        UmxDistanceAggregationBuilder builder = new UmxDistanceAggregationBuilder(aggregationName);
-        String mode = (String)otherOptions.get(MULTIVALUE_MODE_FIELD);
-        if (mode != null) {
-            builder.multiValueMode(MultiValueMode.fromString(mode));
-        }
+        UmxMaxSpeedAggregationBuilder builder = new UmxMaxSpeedAggregationBuilder(aggregationName);
         return builder;
     }
 

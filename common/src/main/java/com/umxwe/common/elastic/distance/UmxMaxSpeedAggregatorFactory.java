@@ -2,7 +2,6 @@ package com.umxwe.common.elastic.distance;
 
 import com.alibaba.fastjson.JSON;
 import org.elasticsearch.index.query.QueryShardContext;
-import org.elasticsearch.search.MultiValueMode;
 import org.elasticsearch.search.aggregations.Aggregator;
 import org.elasticsearch.search.aggregations.AggregatorFactories;
 import org.elasticsearch.search.aggregations.AggregatorFactory;
@@ -23,15 +22,11 @@ import java.util.Map;
  * @Author owen(umxwe)
  * @Date 2021/2/23
  */
-public class UmxDistanceAggregatorFactory extends ArrayValuesSourceAggregatorFactory {
-    private final static Logger logger = LoggerFactory.getLogger(UmxDistanceAggregatorFactory.class);
+public class UmxMaxSpeedAggregatorFactory extends ArrayValuesSourceAggregatorFactory {
+    private final static Logger logger = LoggerFactory.getLogger(UmxMaxSpeedAggregatorFactory.class);
 
-    private final MultiValueMode multiValueMode;
-
-    public UmxDistanceAggregatorFactory(String name,  MultiValueMode multiValueMode
-                                        ,Map<String, ValuesSourceConfig> configs, QueryShardContext queryShardContext, AggregatorFactory parent, AggregatorFactories.Builder subFactoriesBuilder, Map<String, Object> metadata) throws IOException {
+    public UmxMaxSpeedAggregatorFactory(String name, Map<String, ValuesSourceConfig> configs, QueryShardContext queryShardContext, AggregatorFactory parent, AggregatorFactories.Builder subFactoriesBuilder, Map<String, Object> metadata) throws IOException {
         super(name, configs, queryShardContext, parent, subFactoriesBuilder, metadata);
-        this.multiValueMode = multiValueMode;
 
     }
 
@@ -48,12 +43,12 @@ public class UmxDistanceAggregatorFactory extends ArrayValuesSourceAggregatorFac
 //            typedValuesSources.put(entry.getKey(), (ValuesSource.Numeric) entry.getValue());
 //        }
         logger.info("doCreateInternal-valuesSources-size:{}", JSON.toJSONString(valuesSources.size()));
-        return new UmxDistanceAggregator(name, valuesSources, searchContext, parent, multiValueMode, metadata);
+        return new UmxMaxSpeedAggregator(name, valuesSources, searchContext, parent, metadata);
     }
 
     @Override
     protected Aggregator createUnmapped(SearchContext searchContext, Aggregator parent, Map<String, Object> metadata) throws IOException {
-        return new UmxDistanceAggregator(name, null, searchContext, parent,multiValueMode, metadata);
+        return new UmxMaxSpeedAggregator(name, null, searchContext, parent, metadata);
     }
 
 }

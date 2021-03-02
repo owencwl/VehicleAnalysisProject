@@ -1,6 +1,6 @@
 package com.umxwe.fakeplatevehicle;
 
-import com.umxwe.common.elastic.distance.UmxDistanceAggregationBuilder;
+import com.umxwe.common.elastic.distance.UmxMaxSpeedAggregationBuilder;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -57,7 +57,7 @@ public class FakePlateVehicleByES {
         BoolQueryBuilder query =
                 QueryBuilders.boolQuery().must(QueryBuilders.rangeQuery("shotTime").gte(start).lte(end));
         if (null != plateNo)
-            query.must(QueryBuilders.termsQuery("PlateNo", plateNo));
+            query.must(QueryBuilders.termsQuery("plateNo", plateNo));
         CardinalityAggregationBuilder color =
                 AggregationBuilders.cardinality("plateColorDescDistinct").field("plateColorDesc");
         CardinalityAggregationBuilder clas =
@@ -103,7 +103,7 @@ public class FakePlateVehicleByES {
         List fields= new ArrayList<String>();
         fields.add("shotTime");
         fields.add("location");
-        UmxDistanceAggregationBuilder umxDistanceAggregationBuilder=new UmxDistanceAggregationBuilder("speed").fields(fields);
+        UmxMaxSpeedAggregationBuilder umxDistanceAggregationBuilder=new UmxMaxSpeedAggregationBuilder("speed").fields(fields);
 
         ssb.aggregation(AggregationBuilders.terms("GroupbyPlateNo").field("plateNo")
                 .subAggregation(color).subAggregation(clas).subAggregation(brand)

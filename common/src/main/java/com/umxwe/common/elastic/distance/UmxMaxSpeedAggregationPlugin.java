@@ -13,10 +13,10 @@ import static java.util.Collections.singletonList;
  * @Author owen(umxwe)
  * @Date 2021/2/24
  */
-public class UmxDistanceAggregationPlugin extends Plugin implements SearchPlugin {
+public class UmxMaxSpeedAggregationPlugin extends Plugin implements SearchPlugin {
     @Override
     public List<AggregationSpec> getAggregations() {
-        return singletonList(new AggregationSpec(UmxDistanceAggregationBuilder.NAME, UmxDistanceAggregationBuilder::new,
-                new UmxDistanceParser()).addResultReader(InternalUmxDistance::new));
+        return singletonList(new AggregationSpec(UmxMaxSpeedAggregationBuilder.NAME, UmxMaxSpeedAggregationBuilder::new,
+                new UmxMaxSpeedParser()).addResultReader(InternalUmxMaxSpeed::new));
     }
 }
