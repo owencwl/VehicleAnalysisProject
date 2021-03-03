@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.umxwe.genetedata.entity.VehicleEntity;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
+import static jodd.util.ThreadUtil.sleep;
+
 /**
  * @ClassName EventSourceGenerator
  * @Description Todo
@@ -21,6 +23,7 @@ public class EventSourceGenerator  extends RichParallelSourceFunction<String> {
     public void run(SourceContext<String> ctx) throws Exception {
         while (dpv > 0) {
             ctx.collect(JSON.toJSONString(new VehicleEntity()));
+            sleep(1000);
             dpv--;
         }
     }

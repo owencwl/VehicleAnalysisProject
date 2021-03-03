@@ -80,6 +80,7 @@ public class VehicleTrajectoryEntity {
     private double shotPlaceLongitude;//抓拍地点经度
     private String location;//"维度,经度"字符串，用于es中
 
+    private double speed;
 
     public Map<String, Object> toMap() {
 
@@ -307,5 +308,13 @@ public class VehicleTrajectoryEntity {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
     }
 }

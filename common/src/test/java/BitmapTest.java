@@ -1,15 +1,19 @@
+import com.umxwe.common.utils.TimeUtils;
+import org.elasticsearch.search.aggregations.bucket.geogrid.GeoTileUtils;
 import org.junit.Test;
 import org.roaringbitmap.RoaringBitmap;
-import com.umxwe.common.utils.TimeUtils;
-import org.roaringbitmap.buffer.ImmutableRoaringBitmap;
-import org.roaringbitmap.buffer.MutableRoaringBitmap;
+import org.roaringbitmap.longlong.LongUtils;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName BitmapTest
@@ -26,6 +30,8 @@ public class BitmapTest {
         RoaringBitmap rr = RoaringBitmap.bitmapOf(1, 2, 3, 1000);
         RoaringBitmap rr6 = RoaringBitmap.bitmapOf(3, 5, 6, 9);
         System.out.println("intersection:" + RoaringBitmap.and(rr, rr6));
+        rr.or(rr6);
+        System.out.println("distinct:" + rr);
 
 
         TimeUtils.now();
@@ -135,6 +141,87 @@ public class BitmapTest {
 //    System.out.println("read bitmap "+ irb);
 //}
 
+    @Test
+    public void encodedecodetest() throws IOException {
+        int num = 1870095726;
+        String str = "陕JOORRU";
+
+        System.out.println(intToByteArray(num));
+        System.out.println(str.getBytes());
+        System.out.println(byteArrayToInt(str.getBytes()));
+
+
+        long encode = GeoTileUtils.longEncode(179.999, 89.999, 29);
+        System.out.println(encode);
+        String decode = GeoTileUtils.stringEncode(encode);
+        System.out.println(decode);
+
+        System.out.println(GeoTileUtils.longEncode(decode));
+
+        System.out.println( GeoTileUtils.stringEncode(encode)
+        );
+
+        String fromJedi="陕JOORRU";
+        byte[] fromRawData = fromJedi.getBytes();
+
+        BigInteger number = new BigInteger(fromRawData);
+
+        System.out.println(number);
+
+        byte[] toRawData = number.toByteArray();
+        String toJedi = new String(toRawData);
+
+        System.out.println("The new String is: "+toJedi);
+
+
+
+        String m = "test123";
+       byte[] mBytes = m.getBytes();
+
+//        mInt = int.from_bytes(mBytes, byteorder="big")
+//
+//        mBytes2 = mInt.to_bytes(((mInt.bit_length() + 7) // 8), byteorder="big")
+//                m2 = mBytes2.decode("utf-8")
+//                print(m == m2)
+
+
+    }
+
+
+    public long encodeStringToLong(String str) {
+
+        Map<String,Integer> provice=new HashMap<>();
+
+
+
+
+        return 0;
+
+    }
+
+    public String decodeLongToString(Long number) {
+
+
+
+
+        return "";
+
+    }
+
+    /**
+     * byte[]转int
+     *
+     * @param bytes 需要转换成int的数组
+     * @return int值
+     */
+    public int byteArrayToInt(byte[] bytes) {
+        int value = 0;
+        for (int i = 0; i < 4; i++) {
+            int shift = (3 - i) * 8;
+            value += (bytes[i] & 0xFF) << shift;
+        }
+        return value;
+    }
 
     public static byte[] intToByteArray(int i) {
         byte[] result = new byte[4];

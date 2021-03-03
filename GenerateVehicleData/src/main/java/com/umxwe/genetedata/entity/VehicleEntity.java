@@ -30,8 +30,10 @@ public class VehicleEntity {
         this.setPlateColor(RandomDataUtil.randomValue("Red", "black", "white", "green", "yellow", "gray", "Brown"));
         this.setPlateColorDesc(RandomDataUtil.randomValue("红", "黑 ", "白", "绿", "黄", "灰", "棕"));
 
-        this.setPlateNo(((int)Math.random()*100) % 100 == 0 ? RandomDataUtil.generateCarID()
-                : RandomDataUtil.randomValue("湘A1NS20", "湘A2NN30", "湘A2NSV0", "湘A3NST0", "湘A4NS50", "湘ATNS60", "湘A4NS80"));
+//        this.setPlateNo(((int)Math.random()*100) % 100 == 0 ? RandomDataUtil.generateCarID()
+//                : RandomDataUtil.randomValue("湘A1NS20", "湘A2NN30", "湘A2NSV0", "湘A3NST0", "湘A4NS50", "湘ATNS60", "湘A4NS80"));
+
+        this.setPlateNo(RandomDataUtil.randomValue("湘A1NS20", "湘A2NN30", "湘A2NSV0", "湘A3NST0", "湘A4NS50", "湘ATNS60", "湘A4NS80"));
 
         this.setVehicleBrand(RandomDataUtil.randomValue("Red", "black", "white", "green", "yellow", "grey", "Brown", "Audi", "AC Schnitzer", "Artega", "Benz", "BMW", "Porsche", "babos", "Bovo", "VW",
                 "KTM", "Carlson Bai", "mini", "Opel", "smart", "StarTech", "taikat", "weizman", "siyate", " Honda "," Toyota "," Guanggang "," Suzuki "," Lexus ",
