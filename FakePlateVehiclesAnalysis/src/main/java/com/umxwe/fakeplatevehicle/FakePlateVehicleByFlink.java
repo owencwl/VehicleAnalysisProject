@@ -4,33 +4,26 @@ import com.alibaba.fastjson.JSON;
 import com.umxwe.genetedata.entity.VehicleEntity;
 import com.umxwe.genetedata.entity.VehicleTrajectoryEntity;
 import com.umxwe.genetedata.utils.RandomDataUtil;
-import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.RuntimeContext;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.common.state.MapState;
-import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.time.Time;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.configuration.ConfigConstants;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
-import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
-import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.util.Collector;
 import org.apache.http.HttpHost;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -52,13 +45,14 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @ClassName FakePlateVehicleByFlink
- * 使用flink读取kafka的数据，按照keyby进行分组，在组内按照时间的先后顺序进行排序，然后再计算速度值，将速度值写入es
+ * 使用flink读取kafka的数据，按照keyby进行分组，在组内按照时间的先后顺序进行排序（使用watermark的方式对流进行自动排序），然后再计算速度值，将速度值写入es
  * @Description Todo
  * @Author owen(umxwe)
  * @Date 2021/3/3
@@ -82,6 +76,16 @@ public class FakePlateVehicleByFlink {
          */
         bsEnv.enableCheckpointing(10000);
         bsEnv.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+
+        /**
+         * 设置重启策略：
+         * 1、固定延迟重启策略：尝试给定次数重新启动作业。如果超过最大尝试次数，则作业失败。在两次连续重启尝试之间，会有一个固定的延迟等待时间。
+         * eg:尝试次数5次，间隔等待重启时间10秒
+         *
+         * 2、故障率重启策略：在故障后重新作业，当设置的故障率（failure rate）超过每个时间间隔的故障时，作业最终失败。在两次连续重启尝试之间，重启策略延迟等待一段时间
+         * eg: bsEnv.setRestartStrategy(RestartStrategies.failureRateRestart(3,Time.of(5, TimeUnit.MINUTES),Time.of(10, TimeUnit.SECONDS)));
+         */
+        bsEnv.setRestartStrategy(RestartStrategies.fixedDelayRestart(5, Time.of(10, TimeUnit.SECONDS)));
 
         /**
          * 设置为eventtime
@@ -109,7 +113,7 @@ public class FakePlateVehicleByFlink {
         DataStream<VehicleTrajectoryEntity> dataStreamVehicleTrajectoryEntity = dataStream.map(new MapFunction<VehicleEntity, VehicleTrajectoryEntity>() {
             @Override
             public VehicleTrajectoryEntity map(VehicleEntity value) throws Exception {
-                VehicleTrajectoryEntity vehicleTrajectoryEntity = new VehicleTrajectoryEntity();
+                VehicleTrajectoryEntity vehicleTrajectoryEntity = new VehicleTrajectoryEntity();//构造函数默认随机给定一些值
                 vehicleTrajectoryEntity.setPlateClass(value.getPlateClass());
                 vehicleTrajectoryEntity.setPlateColor(value.getPlateColor());
                 vehicleTrajectoryEntity.setPlateClassDesc(value.getPlateClassDesc());
@@ -122,6 +126,9 @@ public class FakePlateVehicleByFlink {
                 vehicleTrajectoryEntity.setVehicleClassDesc(value.getVehicleClassDesc());
                 vehicleTrajectoryEntity.setVehicleColorDesc(value.getVehicleColorDesc());
 
+                /**
+                 * hbase 的rowkey设计，写入es时不用管
+                 */
                 String date = new SimpleDateFormat("yyyyMMdd").format(vehicleTrajectoryEntity.getShotTime());
                 int region = Math.abs((vehicleTrajectoryEntity.getDeviceID() + date).hashCode()) % 5;
                 String salt = RandomDataUtil.stringToMD5(Long.toString(vehicleTrajectoryEntity.getShotTime())).substring(0, 5);
@@ -156,7 +163,7 @@ public class FakePlateVehicleByFlink {
          * 在keyby流中加入watermark机制，保证实时流的顺序性
          * 其中Time.seconds(5L) 需要根据实际的业务场景来定
          */
-        keyedStream.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<VehicleTrajectoryEntity>(Time.seconds(5L)) {
+        keyedStream.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<VehicleTrajectoryEntity>(org.apache.flink.streaming.api.windowing.time.Time.seconds(5L)) {
             /**
              * 用于时间戳抽取器，设置延迟时间，也就是晚到的数据会被丢弃掉
              */
@@ -178,7 +185,8 @@ public class FakePlateVehicleByFlink {
         /**
          * 创建es的索引，索引之前存在则会删除重建
          */
-        createESIndex(httpHosts, "carspeedindex");
+        String esIndex = "carspeedindex";
+        createESIndex(httpHosts, esIndex);
 
         /**
          * build es的sink方式
@@ -191,8 +199,8 @@ public class FakePlateVehicleByFlink {
                          */
                         String source = JSON.toJSONString(element);
                         IndexRequest indexRequest = Requests.indexRequest()
-                                .index("carspeedindex")
-                                .type("carspeedindex")
+                                .index(esIndex)
+                                .type(esIndex)
                                 .source(source, XContentType.JSON);
                         return indexRequest;
                     }
@@ -307,79 +315,6 @@ public class FakePlateVehicleByFlink {
         }
     }
 
-    public static class calculateSpeed extends KeyedProcessFunction<String, VehicleTrajectoryEntity, List<VehicleTrajectoryEntity>> {
-        private final static Logger logger = LoggerFactory.getLogger(calculateSpeed.class);
-        private Map<Long, VehicleTrajectoryEntity> treeMap = new TreeMap<>();
-
-        private MapState<Long, VehicleTrajectoryEntity> mapState;
-
-        @Override
-        public void open(Configuration parameters) throws Exception {
-            MapStateDescriptor<Long, VehicleTrajectoryEntity> mapStateDescriptor = new MapStateDescriptor("map-state", Long.class, VehicleTrajectoryEntity.class);
-            mapState = getRuntimeContext().getMapState(mapStateDescriptor);
-        }
-
-        @Override
-        public void processElement(VehicleTrajectoryEntity value, Context context, Collector<List<VehicleTrajectoryEntity>> out) throws Exception {
-            logger.info(" context.getCurrentKey():{},time:{}", context.getCurrentKey(), value.getShotTime());
-            treeMap.put(value.getShotTime(), value);
-//            mapState.put(value.getShotTime(), value);
-            /**
-             * ontimer定时器，定时完成速度的两两计算
-             */
-
-            context.timerService().registerProcessingTimeTimer(5000);
-
-        }
-
-        @Override
-        public void onTimer(long timestamp, OnTimerContext ctx, Collector<List<VehicleTrajectoryEntity>> out) throws Exception {
-
-            VehicleTrajectoryEntity preItem = null;
-            double speed = 0.0;
-//            logger.info("keySet_time:{}", JSON.toJSONString(new ArrayList<Long>(treeMap.keySet())));
-
-//            Iterator<Map.Entry<Long, VehicleTrajectoryEntity>> iterator = mapState.iterator();
-//            while (iterator.hasNext()) {
-//                Map.Entry<Long, VehicleTrajectoryEntity> item = iterator.next();
-//                treeMap.put(item.getKey(), item.getValue());
-//            }
-
-            logger.info("treemap_size:{}", treeMap.size());
-//            mapState.clear();
-
-            for (Map.Entry<Long, VehicleTrajectoryEntity> item : treeMap.entrySet()
-            ) {
-                if (preItem != null) {
-                    //当前值与上一个值参与计算
-                    double distance = arcDistanceCalculate(item.getValue().getShotPlaceLatitude(), item.getValue().getShotPlaceLongitude(), preItem.getShotPlaceLatitude(), preItem.getShotPlaceLongitude(), DistanceUnit.KILOMETERS);
-                    double timeInterval = Math.abs(item.getKey() - preItem.getShotTime()) / 1000 * 60 * 60;
-                    speed = distance / timeInterval;
-                    logger.info("distance:{},timeInterval:{},speedCalculate:{}", distance, timeInterval, speed);
-                } else {
-                    speed = 0.0;
-                }
-                // set to speed
-                item.getValue().setSpeed(speed);
-                preItem = item.getValue();
-            }
-            out.collect(treeMap.values().stream().collect(Collectors.toList()));
-//            treeMap.clear();
-        }
-
-        public double arcDistanceCalculate(double srcLat, double srcLon, double dstLat, double dstLon, DistanceUnit unit) {
-            return DistanceUnit.convert(arcDistance(srcLat, srcLon, dstLat, dstLon), DistanceUnit.METERS, unit);
-        }
-
-        /**
-         * Return the distance (in meters) between 2 lat,lon geo points using the haversine method implemented by umxwe
-         */
-        public double arcDistance(double lat1, double lon1, double lat2, double lon2) {
-            return UmxSloppyMath.haversinMeters(lat1, lon1, lat2, lon2);
-        }
-
-    }
-
     /**
      * 在每一个keyby流中进行计算
      */
@@ -387,7 +322,7 @@ public class FakePlateVehicleByFlink {
         private final static Logger logger = LoggerFactory.getLogger(FastCalculateSpeed.class);
 
         /**
-         * 用来保存上一次的记录，使用其中的shottime 和 经纬度坐标
+         * state用来保存上一次的记录，使用其中的shottime 和 经纬度坐标
          */
         private ValueState<VehicleTrajectoryEntity> valueState;
 
@@ -451,6 +386,20 @@ public class FakePlateVehicleByFlink {
          */
         public double arcDistance(double lat1, double lon1, double lat2, double lon2) {
             return UmxSloppyMath.haversinMeters(lat1, lon1, lat2, lon2);
+        }
+
+        /**
+         * Return the distance (in meters) between 2 lat,lon geo points using a simple tangential plane
+         * this provides a faster alternative to {arcDistance} but is inaccurate for distances greater than
+         * 4 decimal degrees
+         */
+        public static double planeDistance(double lat1, double lon1, double lat2, double lon2) {
+            /** Earth mean radius defined by WGS 84 in meters */
+            final double EARTH_MEAN_RADIUS = 6371008.7714D;      // meters (WGS 84)
+
+            double x = (lon2 - lon1) * UmxSloppyMath.TO_RADIANS * Math.cos((lat2 + lat1) / 2.0 * UmxSloppyMath.TO_RADIANS);
+            double y = (lat2 - lat1) * UmxSloppyMath.TO_RADIANS;
+            return Math.sqrt(x * x + y * y) * EARTH_MEAN_RADIUS;
         }
 
     }
