@@ -37,7 +37,7 @@ public class ProducerDataToKafkaByFlink {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         DataStream<String> producer =
-                env.addSource(new EventSourceGenerator(100));
+                env.addSource(new EventSourceGenerator(1000));
         producer
                 .addSink(new FlinkKafkaProducer<String>(topic, new ProducerStringSerializationSchema(topic),
                         KafkaUtils.producerProps(servers), FlinkKafkaProducer.Semantic.EXACTLY_ONCE));

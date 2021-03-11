@@ -176,11 +176,12 @@ public class FakePlateVehicleByFlink {
          * sink to es
          */
         List<HttpHost> httpHosts = new ArrayList<>();
-        httpHosts.add(new HttpHost("10.116.200.21", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.22", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.23", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.25", 9200, "http"));
-        httpHosts.add(new HttpHost("10.116.200.26", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.21", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.22", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.23", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.25", 9200, "http"));
+//        httpHosts.add(new HttpHost("10.116.200.26", 9200, "http"));
+        httpHosts.add(new HttpHost("10.116.200.24", 9200, "http"));
 
         /**
          * 创建es的索引，索引之前存在则会删除重建

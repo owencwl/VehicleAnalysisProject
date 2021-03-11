@@ -18,108 +18,299 @@
  */
 package com.umxwe.common.elastic.bitmap;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.index.SortedSetDocValues;
+import org.apache.lucene.util.FixedBitSet;
+import org.apache.lucene.util.RamUsageEstimator;
+import org.elasticsearch.common.lease.Releasable;
 import org.elasticsearch.common.lease.Releasables;
 import org.elasticsearch.common.util.BigArrays;
 import org.elasticsearch.common.util.ObjectArray;
-import org.elasticsearch.index.fielddata.SortedBinaryDocValues;
-import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.search.DocValueFormat;
 import org.elasticsearch.search.aggregations.Aggregator;
 import org.elasticsearch.search.aggregations.InternalAggregation;
 import org.elasticsearch.search.aggregations.LeafBucketCollector;
-import org.elasticsearch.search.aggregations.LeafBucketCollectorBase;
-import org.elasticsearch.search.aggregations.metrics.NumericMetricsAggregator;
-import org.elasticsearch.search.aggregations.pipeline.PipelineAggregator;
+import org.elasticsearch.search.aggregations.metrics.MetricsAggregator;
 import org.elasticsearch.search.aggregations.support.ValuesSource;
 import org.elasticsearch.search.aggregations.support.ValuesSourceConfig;
 import org.elasticsearch.search.internal.SearchContext;
-import org.roaringbitmap.RoaringBitmap;
+import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BitmapAggregator extends NumericMetricsAggregator.SingleValue {
+import java.io.IOException;
+import java.util.Map;
+
+public class BitmapAggregator extends MetricsAggregator {
 
     private static final Logger LOG = LoggerFactory.getLogger(BitmapAggregator.class);
 
     final ValuesSource.Bytes valuesSource;
+    //    final ValuesSource.Bytes.WithOrdinals source;
     final DocValueFormat format;
+    private Collector collector;
 
-    ObjectArray<RoaringBitmap> sums;
-
-//    public BitmapAggregator(
-//            String name, ValuesSource.Bytes valuesSource, DocValueFormat formatter, SearchContext context,
-//            Aggregator parent,Map<String, Object> metadata) throws IOException {
-//        super(name, context, parent,metadata);
-//        this.valuesSource = valuesSource;
-//        this.format = formatter;
-//        if (valuesSource != null) {
-//            sums = context.bigArrays().newObjectArray(1);
-//        }
-//    }
+    private ObjectArray<Roaring64Bitmap> sums;
+    private ObjectArray<FixedBitSet> visitedOrds;
 
     public BitmapAggregator(String name, ValuesSourceConfig valuesSourceConfig, SearchContext searchContext, Aggregator aggregator, Map<String, Object> stringObjectMap) throws IOException {
-        super(name,searchContext,aggregator,stringObjectMap);
-        this.format =valuesSourceConfig.format();
-        valuesSourceConfig.fieldType();
-        valuesSourceConfig.valueSourceType();
-        this.valuesSource = valuesSourceConfig.hasValues()? (ValuesSource.Bytes) valuesSourceConfig.getValuesSource() :null;
+        super(name, searchContext, aggregator, stringObjectMap);
+        this.format = valuesSourceConfig.format();
+
+
+//        if (valuesSourceConfig.getValuesSource() instanceof ValuesSource.Bytes.WithOrdinals) {
+//            source = (ValuesSource.Bytes.WithOrdinals) valuesSourceConfig.getValuesSource();
+//            LOG.info("ValuesSource_Bytes_WithOrdinals");
+//        }else {
+//            source=null;
+//        }
+        this.valuesSource = valuesSourceConfig.hasValues() ? (ValuesSource.Bytes) valuesSourceConfig.getValuesSource() : null;
         if (valuesSource != null) {
             sums = context.bigArrays().newObjectArray(1);
         }
     }
 
-//    @Override
-//    public boolean needsScores() {
-//        return valuesSource != null && valuesSource.needsScores();
-//    }
-
-    @Override
-    public LeafBucketCollector getLeafCollector(LeafReaderContext ctx,
-            final LeafBucketCollector sub) throws IOException {
+    private Collector pickCollector(LeafReaderContext ctx) throws IOException {
         if (valuesSource == null) {
-            return LeafBucketCollector.NO_OP_COLLECTOR;
+            return new EmptyCollector();
         }
-        final BigArrays bigArrays = context.bigArrays();
-        final SortedBinaryDocValues values = valuesSource.bytesValues(ctx);
-        return new LeafBucketCollectorBase(sub, values) {
-            @Override
-            public void collect(int doc, long bucket) throws IOException {
-                sums = bigArrays.grow(sums, bucket + 1);
-               if( values.advanceExact(doc)){
-                   final int valuesCount = values.docValueCount();
-                   RoaringBitmap sum = new RoaringBitmap();
-                   for (int i = 0; i < valuesCount; i++) {
-                       BytesRef valueAt = values.nextValue();
-                       byte[] bytes = valueAt.bytes;
-                       RoaringBitmap roaringBitmap = BitmapUtil.deserializeBitmap(bytes);
-                       sum.or(roaringBitmap);
-                   }
-                   RoaringBitmap roaringBitmap = sums.get(bucket);
-                   if (roaringBitmap == null) {
-                       sums.set(bucket, sum);
-                   } else {
-                       roaringBitmap.or(sum);
-                   }
-                   LOG.debug("LeafBucketCollectorBase collect: doc [{}], bucket [{}], bitmap [{}]", doc, bucket, sums.get(bucket));
-               }
+
+
+        if (valuesSource instanceof ValuesSource.Bytes.WithOrdinals) {
+            ValuesSource.Bytes.WithOrdinals source = (ValuesSource.Bytes.WithOrdinals) valuesSource;
+            final SortedSetDocValues ordinalValues = source.globalOrdinalsValues(ctx);
+            final long maxOrd = ordinalValues.getValueCount();
+            if (maxOrd == 0) {
+                return new EmptyCollector();
             }
-        };
+            return new OrdinalsCollector(sums, ordinalValues, context.bigArrays());
+
+//            final long ordinalsMemoryUsage = OrdinalsCollector.memoryOverhead(maxOrd);
+//            final long countsMemoryUsage = HyperLogLogPlusPlus.memoryUsage(precision);
+//            // only use ordinals if they don't increase memory usage by more than 25%
+//            if (ordinalsMemoryUsage < countsMemoryUsage / 4) {
+//                return new OrdinalsCollector(counts, ordinalValues, context.bigArrays());
+//            }
+
+        }
+        return new EmptyCollector();
     }
 
     @Override
-    public double metric(long owningBucketOrd) {
-        LOG.debug("BitmapAggregator metric: owningBucketOrd [{}]", owningBucketOrd);
-        if (valuesSource == null || owningBucketOrd >= sums.size()) {
-            return 0.0;
-        }
-        return sums.get(owningBucketOrd).getCardinality();
+    protected LeafBucketCollector getLeafCollector(LeafReaderContext ctx, LeafBucketCollector sub) throws IOException {
+//        postCollectLastCollector();
+
+        collector = pickCollector(ctx);
+        return collector;
     }
+
+    private void postCollectLastCollector() throws IOException {
+        if (collector != null) {
+            try {
+                collector.postCollect();
+                collector.close();
+            } finally {
+                collector = null;
+            }
+        }
+    }
+
+    @Override
+    protected void doPostCollection() throws IOException {
+//        postCollectLastCollector();
+    }
+
+    private abstract static class Collector extends LeafBucketCollector implements Releasable {
+
+        public abstract void postCollect() throws IOException;
+
+    }
+
+    private static class EmptyCollector extends Collector {
+
+        @Override
+        public void collect(int doc, long bucketOrd) {
+            // no-op
+        }
+
+        @Override
+        public void postCollect() {
+            // no-op
+        }
+
+        @Override
+        public void close() {
+            // no-op
+        }
+    }
+
+    private static class OrdinalsCollector extends Collector {
+
+        private static final long SHALLOW_FIXEDBITSET_SIZE = RamUsageEstimator.shallowSizeOfInstance(FixedBitSet.class);
+
+        /**
+         * Return an approximate memory overhead per bucket for this collector.
+         */
+        public static long memoryOverhead(long maxOrd) {
+            return RamUsageEstimator.NUM_BYTES_OBJECT_REF + SHALLOW_FIXEDBITSET_SIZE + (maxOrd + 7) / 8; // 1 bit per ord
+        }
+
+        private final BigArrays bigArrays;
+        private final SortedSetDocValues values;
+        private final int maxOrd;
+        private ObjectArray<FixedBitSet> visitedOrds;
+        private ObjectArray<Roaring64Bitmap> sums;
+
+
+        OrdinalsCollector(ObjectArray<Roaring64Bitmap> sums, SortedSetDocValues values,
+                          BigArrays bigArrays) {
+            if (values.getValueCount() > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException();
+            }
+            maxOrd = (int) values.getValueCount();
+            this.bigArrays = bigArrays;
+            this.values = values;
+            this.sums = sums;
+//            visitedOrds = bigArrays.newObjectArray(1);
+
+        }
+
+        @Override
+        public void collect(int doc, long bucket) throws IOException {
+//            visitedOrds = bigArrays.grow(visitedOrds, bucket + 1);
+//            FixedBitSet bits = visitedOrds.get(bucket);
+//            if (bits == null) {
+//                bits = new FixedBitSet(maxOrd);
+//                visitedOrds.set(bucket, bits);
+//            }
+//            if (values.advanceExact(doc)) {
+//                for (long ord = values.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = values.nextOrd()) {
+//                    bits.set((int) ord);
+//                }
+//            }
+
+            sums = bigArrays.grow(sums, bucket + 1);
+            Roaring64Bitmap roaring64Bitmap = sums.get(bucket);
+            if (roaring64Bitmap == null) {
+                roaring64Bitmap = new Roaring64Bitmap();
+                sums.set(bucket, roaring64Bitmap);
+            }
+            if (values.advanceExact(doc)) {
+                for (long ord = values.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = values.nextOrd()) {
+//                    LOG.info("ordinalValues:{}", ord);
+//                    byte[] bytes = valueAt.bytes;
+//                    BitmapUtil.encodeBitmap(new String(bytes, "utf-8"));
+                    roaring64Bitmap.add(ord);
+                    roaring64Bitmap.runOptimize();
+                }
+//                LOG.info("LeafBucketCollectorBase collect: doc [{}], bucket [{}], bitmap [{}]", doc, bucket, roaring64Bitmap);
+            }
+
+        }
+
+        /**
+         * 此方法只会执行最后一次
+         *
+         * @throws IOException
+         */
+        @Override
+        public void postCollect() throws IOException {
+            final FixedBitSet allVisitedOrds = new FixedBitSet(maxOrd);
+            for (long bucket = visitedOrds.size() - 1; bucket >= 0; --bucket) {
+                final FixedBitSet bits = visitedOrds.get(bucket);
+                if (bits != null) {
+                    allVisitedOrds.or(bits);
+                }
+            }
+
+            /**
+             * 每个bucket进行或运算，获得不重复的值
+             */
+            Roaring64Bitmap roaring64Bitmap = new Roaring64Bitmap();
+            for (long bucket = sums.size() - 1; bucket >= 0; --bucket) {
+                final Roaring64Bitmap bitmap = sums.get(bucket);
+                if (bitmap != null) {
+                    roaring64Bitmap.or(bitmap);
+                }
+            }
+
+        }
+
+        @Override
+        public void close() {
+//            Releasables.close(visitedOrds);
+        }
+
+    }
+
+
+    //    @Override
+//    public LeafBucketCollector getLeafCollector(LeafReaderContext ctx,
+//            final LeafBucketCollector sub) throws IOException {
+//        if (valuesSource == null) {
+//            return LeafBucketCollector.NO_OP_COLLECTOR;
+//        }
+//        final BigArrays bigArrays = context.bigArrays();
+//        final SortedBinaryDocValues values = valuesSource.bytesValues(ctx);
+//        final SortedSetDocValues ordinalValues = source.ordinalsValues(ctx);
+//
+//
+//        return new LeafBucketCollectorBase(sub, ordinalValues) {
+//            @Override
+//            public void collect(int doc, long bucket) throws IOException {
+//                sums = bigArrays.grow(sums, bucket + 1);
+//                Roaring64Bitmap roaring64Bitmap = sums.get(bucket);
+//                if (roaring64Bitmap == null) {
+//                    roaring64Bitmap=new Roaring64Bitmap();
+//                    sums.set(bucket, roaring64Bitmap);
+//                }
+//                if( ordinalValues.advanceExact(doc)) {
+//                    for (long ord = ordinalValues.nextOrd(); ord != SortedSetDocValues.NO_MORE_ORDS; ord = ordinalValues.nextOrd()) {
+//                        LOG.info("ordinalValues:{}",ord);
+//                        roaring64Bitmap.add(ord);
+//                    }
+//                    LOG.info("LeafBucketCollectorBase collect: doc [{}], bucket [{}], bitmap [{}]", doc, bucket, roaring64Bitmap);
+//                }
+//
+////                postCollect();
+//
+////               if( values.advanceExact(doc)){
+////                   final int valuesCount = values.docValueCount();
+////                   Roaring64Bitmap sum = new Roaring64Bitmap();
+////                   for (int i = 0; i < valuesCount; i++) {
+////                       BytesRef valueAt = values.nextValue();
+////                       byte[] bytes = valueAt.bytes;
+////                       String tmp=new String(bytes, "utf-8");
+////                       LOG.info("getLeafCollector:{}",tmp );
+//////                       RoaringBitmap roaringBitmap = BitmapUtil.deserializeBitmap(bytes);
+////                       Roaring64Bitmap roaringBitmap = BitmapUtil.encodeBitmap(tmp);
+////                       sum.or(roaringBitmap);
+////                   }
+////                   Roaring64Bitmap roaringBitmap = sums.get(bucket);
+////                   if (roaringBitmap == null) {
+////                       sums.set(bucket, sum);
+////                   } else {
+////                       roaringBitmap.or(sum);
+////                   }
+////                   LOG.debug("LeafBucketCollectorBase collect: doc [{}], bucket [{}], bitmap [{}]", doc, bucket, sums.get(bucket));
+////               }
+//            }
+//            public void postCollect() throws IOException {
+//                /**
+//                 * 每个bucket进行或运算，获得不重复的值
+//                 */
+//                Roaring64Bitmap roaring64Bitmap=new Roaring64Bitmap();
+//                for (long bucket = sums.size() - 1; bucket >= 0; --bucket) {
+//                    final Roaring64Bitmap bitmap = sums.get(bucket);
+//                    if (bitmap != null) {
+//                        roaring64Bitmap.or(bitmap);
+//                    }
+//                }
+//
+//            }
+//
+//        };
+//    }
 
     @Override
     public InternalAggregation buildAggregation(long bucket) {
@@ -133,7 +324,7 @@ public class BitmapAggregator extends NumericMetricsAggregator.SingleValue {
     @Override
     public InternalAggregation buildEmptyAggregation() {
         LOG.debug("BitmapAggregator buildEmptyAggregation");
-        return new InternalBitmap(name, new RoaringBitmap(), format, metadata());
+        return new InternalBitmap(name, new Roaring64Bitmap(), format, metadata());
     }
 
     @Override

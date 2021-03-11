@@ -23,10 +23,18 @@ import org.elasticsearch.search.aggregations.metrics.NumericMetricsAggregation;
 /**
  * An aggregation that computes the distinct of the values in the current bucket.
  */
-public interface BitmapDistinct extends NumericMetricsAggregation.SingleValue {
+public interface BitmapDistinct extends NumericMetricsAggregation.MultiValue {
 
     /**
      * The distinct.
      */
-    double getValue();
+    long getValue();
+
+    /**
+     *  return byte array
+     * @return
+     */
+    byte[] getByteValue();
+
+
 }

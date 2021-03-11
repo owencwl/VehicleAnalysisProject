@@ -3,6 +3,7 @@ import org.elasticsearch.search.aggregations.bucket.geogrid.GeoTileUtils;
 import org.junit.Test;
 import org.roaringbitmap.RoaringBitmap;
 import org.roaringbitmap.longlong.LongUtils;
+import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -10,10 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @ClassName BitmapTest
@@ -73,6 +71,31 @@ public class BitmapTest {
 //        for(int i : rr) {
 //            System.out.println(i);
 //        }
+
+        long count=300000;
+        Roaring64Bitmap roaring64Bitmap=new Roaring64Bitmap();
+        while (count>=0){
+             long num=new Random().nextLong();
+            roaring64Bitmap.add(num);
+            count--;
+        }
+        roaring64Bitmap.runOptimize();
+
+        count=300000;
+        Roaring64Bitmap roaring64Bitmap2=new Roaring64Bitmap();
+        while (count>=0){
+            long num=new Random().nextLong();
+            roaring64Bitmap2.add(num);
+            count--;
+        }
+        roaring64Bitmap2.runOptimize();
+
+        long current=System.currentTimeMillis();
+        roaring64Bitmap.or(roaring64Bitmap2);
+
+        System.out.println("took:"+(System.currentTimeMillis()-current));
+        System.out.println(roaring64Bitmap2);
+
     }
 
     @Test
@@ -174,16 +197,16 @@ public class BitmapTest {
         System.out.println("The new String is: "+toJedi);
 
 
+        String code="AQcAAAAAAAAAAAIAAQAAAIBkAAIAAVwAAAEAAAQAAJeRi4UEAAAAAGRcAIVlAAAAAAAAAAAAAgAAAABbWgQAAAAAZFwAi1oBAAAAAAAAAAQAAAAAZFwAi1sCAAAAAAAAAAQAAAAAZFwAkVEDAAAAAAAAAAQAAAAAZFwAl0cEAAAAAAAAAAQAAAAAZFwBVgMFAAAAAAAAAAQAAAAAgJf6V7AGAAAAAAAAAAEAAAD+CQAAAAECAQAAAGhiAQIBAAAAfIABAgEAAAB4UQECAQAAALAxAQICAAAAlAbABwECAQAAAPgmAQIBAAAARg8AAAcAAAAAAAAAAAAAAAYAAAA=";
 
-        String m = "test123";
-       byte[] mBytes = m.getBytes();
 
-//        mInt = int.from_bytes(mBytes, byteorder="big")
-//
-//        mBytes2 = mInt.to_bytes(((mInt.bit_length() + 7) // 8), byteorder="big")
-//                m2 = mBytes2.decode("utf-8")
-//                print(m == m2)
+        Roaring64Bitmap roaring64Bitmap =new Roaring64Bitmap();
 
+        byte[] bytes=code.getBytes();
+        System.out.println(bytes);
+        roaring64Bitmap.deserialize(ByteBuffer.wrap(bytes));
+
+        System.out.println(roaring64Bitmap);
 
     }
 

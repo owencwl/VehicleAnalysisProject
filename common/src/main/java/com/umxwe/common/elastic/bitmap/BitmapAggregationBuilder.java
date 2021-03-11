@@ -19,44 +19,37 @@
 
 package com.umxwe.common.elastic.bitmap;
 
-import java.io.IOException;
-import java.util.Map;
-
 import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.ObjectParser;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-//import org.elasticsearch.index.query.QueryParseContext;
 import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.index.query.QueryParser;
 import org.elasticsearch.index.query.QueryShardContext;
-import org.elasticsearch.index.search.QueryParserHelper;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregatorFactories.Builder;
 import org.elasticsearch.search.aggregations.AggregatorFactory;
 import org.elasticsearch.search.aggregations.support.*;
 import org.elasticsearch.search.aggregations.support.ValuesSource.Bytes;
-import org.elasticsearch.search.aggregations.support.MultiValuesSourceParseHelper;
-import org.elasticsearch.search.internal.SearchContext;
+
+import java.io.IOException;
+import java.util.Map;
+
 
 public class BitmapAggregationBuilder extends ValuesSourceAggregationBuilder.LeafOnly<Bytes, BitmapAggregationBuilder> {
 
     public static final String NAME = "bitmap";
-
-    private static final ObjectParser<BitmapAggregationBuilder, String> PARSER;
-
+    public static final ObjectParser<BitmapAggregationBuilder, String> PARSER = ObjectParser.fromBuilder(BitmapAggregationBuilder.NAME,BitmapAggregationBuilder::new);
     static {
-        PARSER = ObjectParser.fromBuilder(BitmapAggregationBuilder.NAME,BitmapAggregationBuilder::new);
-        ValuesSourceAggregationBuilder.declareFields(PARSER, true, true, false);
+        ValuesSourceAggregationBuilder.declareFields(PARSER, false, false, false);
     }
 
     public static void registerAggregators(ValuesSourceRegistry.Builder builder) {
         BitmapAggregatorFactory.registerAggregators(builder);
     }
 
-    public static AggregationBuilder parse(String aggregationName, XContentParser parser) throws IOException {
-        return PARSER.parse(parser, new BitmapAggregationBuilder(aggregationName), null);
-    }
+//    public static AggregationBuilder parse(String aggregationName, XContentParser parser) throws IOException {
+//        return PARSER.parse(parser, new BitmapAggregationBuilder(aggregationName), null);
+//    }
 
     public BitmapAggregationBuilder(BitmapAggregationBuilder bitmapAggregationBuilder, Builder factoriesBuilder, Map<String, Object> metadata) {
         super(bitmapAggregationBuilder,factoriesBuilder,metadata);

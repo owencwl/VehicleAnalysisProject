@@ -23,7 +23,7 @@ public class EventSourceGenerator  extends RichParallelSourceFunction<String> {
     public void run(SourceContext<String> ctx) throws Exception {
         while (dpv > 0) {
             ctx.collect(JSON.toJSONString(new VehicleEntity()));
-            sleep(1000);
+//            sleep(1000);
             dpv--;
         }
     }
