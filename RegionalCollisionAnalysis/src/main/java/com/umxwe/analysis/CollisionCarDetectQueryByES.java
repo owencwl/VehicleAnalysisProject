@@ -93,7 +93,7 @@ public class CollisionCarDetectQueryByES {
              * 把bitmap添加到查询中
              */
             ssb.aggregation(bitmapAggregationBuilder);
-            ssb.query(queryBuilder);
+//            ssb.query(queryBuilder);
             System.out.println("ES_DSL语句:" + ssb.toString());
             SearchRequest searchRequest = new SearchRequest();
             searchRequest.source(ssb);

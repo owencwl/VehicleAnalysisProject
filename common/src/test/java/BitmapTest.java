@@ -1,9 +1,11 @@
+import com.umxwe.common.elastic.bitmap.BitmapUtil;
 import com.umxwe.common.utils.TimeUtils;
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoTileUtils;
 import org.junit.Test;
 import org.roaringbitmap.RoaringBitmap;
 import org.roaringbitmap.longlong.LongUtils;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
+import org.xerial.snappy.Snappy;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
 import java.util.*;
 
 /**
@@ -96,8 +99,65 @@ public class BitmapTest {
         System.out.println("took:"+(System.currentTimeMillis()-current));
         System.out.println(roaring64Bitmap2);
 
+
+
+
+
     }
 
+    @Test
+    public void compressBitmapTest() throws IOException {
+        long count=5000000;
+        Roaring64Bitmap roaring64Bitmap=new Roaring64Bitmap();
+        while (count>=0){
+            long num=new Random().nextLong();
+            roaring64Bitmap.add(num);
+            count--;
+        }
+        roaring64Bitmap.runOptimize();
+        System.out.println("compress before:"+getNetFileSizeDescription(BitmapUtil.serializeBitmap(roaring64Bitmap).length));
+
+        byte[] compressBitmap= Snappy.compress(BitmapUtil.serializeBitmap(roaring64Bitmap));
+        System.out.println("compress after:"+getNetFileSizeDescription(compressBitmap.length));
+    }
+    @Test
+    public void xorandnotTest(){
+        RoaringBitmap a = RoaringBitmap.bitmapOf(1, 2, 3, 1000);
+        RoaringBitmap b = RoaringBitmap.bitmapOf(3, 5, 6, 9);
+        System.out.println("交集intersection:" + RoaringBitmap.and(a, b));
+        System.out.println("异或xor:" + RoaringBitmap.xor(a, b));
+        System.out.println("不同的andnot:" + RoaringBitmap.andNot(a, b));
+    }
+
+
+
+    /**
+     * 存储单位转换
+     *
+     * @param size
+     * @return
+     */
+    public static String getNetFileSizeDescription(long size) {
+        StringBuffer bytes = new StringBuffer();
+        DecimalFormat format = new DecimalFormat("###.0");
+        if (size >= 1024 * 1024 * 1024) {
+            double i = (size / (1024.0 * 1024.0 * 1024.0));
+            bytes.append(format.format(i)).append("GB");
+        } else if (size >= 1024 * 1024) {
+            double i = (size / (1024.0 * 1024.0));
+            bytes.append(format.format(i)).append("MB");
+        } else if (size >= 1024) {
+            double i = (size / (1024.0));
+            bytes.append(format.format(i)).append("KB");
+        } else if (size < 1024) {
+            if (size <= 0) {
+                bytes.append("0B");
+            } else {
+                bytes.append((int) size).append("B");
+            }
+        }
+        return bytes.toString();
+    }
     @Test
     public void RoaringBitmapTest() throws Exception {
 
