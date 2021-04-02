@@ -8,8 +8,8 @@ package com.umxwe.genetedata.tmp;
  */
 public class TimeRange {
 
-    private String startPoint ;
-    private String endPoint ;
+    private String startPoint;
+    private String endPoint;
 
     public String getStartPoint() {
         return startPoint;
@@ -28,6 +28,6 @@ public class TimeRange {
     }
 
     public String toString() {
-        return startPoint + " - " + endPoint ;
+        return startPoint + " - " + endPoint;
     }
 }

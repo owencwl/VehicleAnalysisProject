@@ -4,6 +4,7 @@ import com.umxwe.common.param.Params;
 import com.umxwe.common.source.SourceConnector;
 import com.umxwe.common.source.hbase.param.HbaseSourceParams;
 import com.umxwe.common.utils.DataStreamConversionUtil;
+
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.connector.hbase.source.HBaseTableSource;
@@ -27,7 +28,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import static org.apache.flink.table.descriptors.HBaseValidator.*;
+import static org.apache.flink.table.descriptors.HBaseValidator.CONNECTOR_TABLE_NAME;
+import static org.apache.flink.table.descriptors.HBaseValidator.CONNECTOR_ZK_NODE_PARENT;
+import static org.apache.flink.table.descriptors.HBaseValidator.CONNECTOR_ZK_QUORUM;
 import static org.apache.flink.table.descriptors.Schema.SCHEMA;
 
 /**
@@ -54,6 +57,7 @@ public abstract class HbaseSourceConnector implements SourceConnector {
         descriptorProperties.putProperties(this.configure().get(HbaseSourceParams.HBASE_CONNNECT_INFO));
         return descriptorProperties;
     }
+
     @Override
     public void open() throws Exception {
         senv = StreamExecutionEnvironment.createLocalEnvironment();
@@ -72,7 +76,7 @@ public abstract class HbaseSourceConnector implements SourceConnector {
                 descriptorProperties.getTableSchema(SCHEMA));
         HBaseTableSchema hbaseSchema = validateTableSchema(tableSchema);
 
-        hbaseStreamTableSource= new HBaseTableSource(hbaseClientConf, hTableName, hbaseSchema, null);
+        hbaseStreamTableSource = new HBaseTableSource(hbaseClientConf, hTableName, hbaseSchema, null);
         /**
          *  * HBaseTableSource hSrc = new HBaseTableSource(conf, "hTable");
          *  * hSrc.setRowKey("rowkey", String.class);
@@ -88,7 +92,7 @@ public abstract class HbaseSourceConnector implements SourceConnector {
          */
     }
 
-    public TableSchema setTableSchema(){
+    public TableSchema setTableSchema() {
         return null;
     }
 

@@ -6,6 +6,7 @@ package com.umxwe.common.hbase.utils;
  * @Author owen(umxwe)
  * @Date 2021/2/5
  */
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -15,6 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * SimplePool是简单的资源对象管理池， 可以将Closable的资源类实例放在此池中进行管理
+ *
  * @param <T>
  */
 public class SimplePool<T> {
@@ -23,15 +25,17 @@ public class SimplePool<T> {
     boolean cglib = false;
     private LinkedBlockingQueue<T> sources = new LinkedBlockingQueue<T>();
     private List<T> origins = new ArrayList<T>();
-    public SimplePool(){
+
+    public SimplePool() {
     }
 
     /**
-     *  SimplePool 支持用cglib和JDK动态代理两种方式， closemethodname用户指定回收资源的方法名
+     * SimplePool 支持用cglib和JDK动态代理两种方式， closemethodname用户指定回收资源的方法名
+     *
      * @param cglib
      * @param closemethodname
      */
-    public SimplePool(boolean cglib, String closemethodname){
+    public SimplePool(boolean cglib, String closemethodname) {
         this.cglib = cglib;
         this.closemethod = closemethodname;
     }
@@ -58,9 +62,10 @@ public class SimplePool<T> {
 
     /**
      * 将资源加入到池中
+     *
      * @param t
      */
-    public  synchronized  void addSource(T t) {
+    public synchronized void addSource(T t) {
         origins.add(t);
         if (cglib) {
 //            Interceptor interceptor = new Interceptor(t);
@@ -83,7 +88,9 @@ public class SimplePool<T> {
         Handler(T t) {
             target = t;
         }
+
         T target;
+
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             if (method.getName().equalsIgnoreCase(SimplePool.this.closemethod)) {
@@ -96,6 +103,7 @@ public class SimplePool<T> {
 
     /**
      * 获取可用资源数量
+     *
      * @return
      */
     public int count() {
@@ -104,9 +112,10 @@ public class SimplePool<T> {
 
     /**
      * 获取已放入池中的资源数量
+     *
      * @return
      */
-    public int size(){
-        return  this.origins.size();
+    public int size() {
+        return this.origins.size();
     }
 }

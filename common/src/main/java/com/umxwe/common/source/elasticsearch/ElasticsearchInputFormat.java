@@ -6,7 +6,9 @@ package com.umxwe.common.source.elasticsearch;
  * @Author owen(umxwe))
  * @Date 2020/12/17
  */
+
 import com.umxwe.common.param.Params;
+
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.types.Row;
 import org.elasticsearch.search.SearchHit;
@@ -27,7 +29,7 @@ public class ElasticsearchInputFormat extends ElasticsearchInputFormatBase<Row> 
 //    private DeserializationSchema<Row> deserializationSchema;
 
     public ElasticsearchInputFormat(Params ESParams, String queryConditionStr, RowTypeInfo rowTypeInfo) {
-        super(ESParams,queryConditionStr,rowTypeInfo);
+        super(ESParams, queryConditionStr, rowTypeInfo);
     }
 
     /**
@@ -42,19 +44,20 @@ public class ElasticsearchInputFormat extends ElasticsearchInputFormatBase<Row> 
 
     /**
      * transfer to org.apache.flink.types.Row
-     * @param hit SearchHit
+     *
+     * @param hit   SearchHit
      * @param reuse
      * @return
      * @throws IOException
      */
     @Override
-    public Row transform(SearchHit hit,Row reuse) throws IOException {
+    public Row transform(SearchHit hit, Row reuse) throws IOException {
         for (Map.Entry<String, Object> entry : hit.getSourceAsMap().entrySet()) {
-                Integer p = position.get(entry.getKey());
-                if (p == null) {
-                    throw new IOException("unknown field " + entry.getKey());
-                }
-                reuse.setField(p, entry.getValue());
+            Integer p = position.get(entry.getKey());
+            if (p == null) {
+                throw new IOException("unknown field " + entry.getKey());
+            }
+            reuse.setField(p, entry.getValue());
         }
 //        Row row = null;
 //        try {
@@ -66,10 +69,10 @@ public class ElasticsearchInputFormat extends ElasticsearchInputFormatBase<Row> 
     }
 
 
-
     public static Builder builder(Params ESParams) {
         return new Builder(ESParams);
     }
+
     public static class Builder {
 
         private Params ESParams;
@@ -81,9 +84,10 @@ public class ElasticsearchInputFormat extends ElasticsearchInputFormatBase<Row> 
         }
 
         public Builder setQueryConditionStr(String queryConditionStr) {
-            this.queryConditionStr=queryConditionStr;
+            this.queryConditionStr = queryConditionStr;
             return this;
         }
+
         public Builder setRowTypeInfo(RowTypeInfo rowTypeInfo) {
             this.rowTypeInfo = rowTypeInfo;
             return this;
@@ -91,10 +95,11 @@ public class ElasticsearchInputFormat extends ElasticsearchInputFormatBase<Row> 
 
         /**
          * 创建ElasticsearchInputFormat实例
+         *
          * @return ElasticsearchInputFormat
          */
         public ElasticsearchInputFormat build() {
-            return new ElasticsearchInputFormat(this.ESParams,this.queryConditionStr,this.rowTypeInfo);
+            return new ElasticsearchInputFormat(this.ESParams, this.queryConditionStr, this.rowTypeInfo);
         }
     }
 

@@ -4,20 +4,16 @@ import com.umxwe.common.param.Params;
 import com.umxwe.common.source.elasticsearch.ElasticsearchInputFormat;
 import com.umxwe.common.source.elasticsearch.param.ElasticSearchSourceParams;
 import com.umxwe.common.utils.DataSetConversionUtil;
-import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.ReduceFunction;
-import org.apache.flink.api.common.functions.RichGroupReduceFunction;
+
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.BatchTableEnvironment;
 import org.apache.flink.types.Row;
-import org.apache.flink.util.Collector;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -33,9 +29,10 @@ public class RegionCollisionAnalysisByFlink {
 
     public static void main(String[] args) throws Exception {
 
-        flinkAPIBatchReadES(null,null);
+        flinkAPIBatchReadES(null, null);
 
     }
+
     public static void flinkAPIBatchReadES(ExecutionEnvironment env, BatchTableEnvironment tEnv) throws Exception {
         if (env == null) {
             env = ExecutionEnvironment.getExecutionEnvironment();
@@ -95,9 +92,6 @@ public class RegionCollisionAnalysisByFlink {
 //            }
 //        })
                 .print();
-
-
-
 
 
 //        pvDataSet.print();

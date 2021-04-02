@@ -1,12 +1,11 @@
 package com.umxwe.genetedata.flink;
 
-import com.alibaba.fastjson.JSON;
 import com.umxwe.genetedata.entity.VehicleEntity;
+
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.calcite.shaded.com.google.common.hash.HashFunction;
 import org.apache.flink.calcite.shaded.com.google.common.hash.Hashing;
-import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +29,8 @@ public class RedisMapBuilderFunction implements MapFunction<VehicleEntity, Tuple
 
     @Override
     public Tuple3<String, String, Object> map(VehicleEntity vehicleEntity) throws Exception {
-        counter ++;
-        String plateNo=vehicleEntity.getPlateNo();
+        counter++;
+        String plateNo = vehicleEntity.getPlateNo();
         int shardingNum = Math.abs(hash.hashBytes(plateNo.getBytes()).asInt()) % REDIS_CLUSTER_SHARDING_MODE;
         String key = USER_BITINDEX_SHARDING_KEY + shardingNum;
         Map<String, String> map = new HashMap<>();

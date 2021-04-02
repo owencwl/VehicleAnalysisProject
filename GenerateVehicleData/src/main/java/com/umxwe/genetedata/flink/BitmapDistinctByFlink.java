@@ -52,7 +52,7 @@ public class BitmapDistinctByFlink {
 
         TextInputFormat input = new TextInputFormat(new Path(""));
         input.setCharsetName("UTF-8");
-        DataSet<String> source =  env.createInput(input).filter(e -> !e.startsWith("user_id")).map(
+        DataSet<String> source = env.createInput(input).filter(e -> !e.startsWith("user_id")).map(
                 new MapFunction<String, String>() {
                     @Override
                     public String map(String value) throws Exception {
@@ -77,7 +77,6 @@ public class BitmapDistinctByFlink {
 
 
     }
-
 
 
     public static class BitIndexBuilderMap extends RichMapFunction<Tuple2<String, String>, Tuple3<String, String, Integer>> {
@@ -118,6 +117,7 @@ public class BitmapDistinctByFlink {
 
         /**
          * 把userId递增化,在redis中建立一个id映射关系
+         *
          * @param in
          * @return
          * @throws Exception
@@ -131,19 +131,19 @@ public class BitmapDistinctByFlink {
             RMap<String, String> rMap = redissonClient.getMap(mapKey);
             // 如果为空,生成一个bitIndex
             String bitIndexStr = rMap.get(userId);
-            if(StringUtils.isEmpty(bitIndexStr)) {
+            if (StringUtils.isEmpty(bitIndexStr)) {
                 LOG.info("userId[{}]的bitIndex为空, 开始生成bitIndex", userId);
                 RLock lock = redissonClient.getLock(GLOBAL_COUNTER_LOCKER_KEY);
-                try{
+                try {
                     lock.tryLock(60, TimeUnit.SECONDS);
                     // 再get一次
                     bitIndexStr = rMap.get(userId);
-                    if(StringUtils.isEmpty(bitIndexStr)) {
+                    if (StringUtils.isEmpty(bitIndexStr)) {
                         RAtomicLong atomic = redissonClient.getAtomicLong(GLOBAL_COUNTER_KEY);
                         bitIndexStr = String.valueOf(atomic.incrementAndGet());
                     }
                     rMap.put(userId, bitIndexStr);
-                }finally{
+                } finally {
                     lock.unlock();
                 }
                 LOG.info("userId[{}]的bitIndex生成结束, bitIndex: {}", userId, bitIndexStr);
@@ -153,7 +153,7 @@ public class BitmapDistinctByFlink {
 
         @Override
         public void close() throws Exception {
-            if(redissonClient != null) {
+            if (redissonClient != null) {
                 redissonClient.shutdown();
             }
         }
@@ -184,8 +184,7 @@ public class BitmapDistinctByFlink {
         }
 
         /**
-         *
-         * @param in Tuple3<String, String, Integer> : Tuple3<shizc, www.baidu.com, 0001>
+         * @param in  Tuple3<String, String, Integer> : Tuple3<shizc, www.baidu.com, 0001>
          * @param ctx
          * @param out
          * @throws Exception
@@ -201,7 +200,7 @@ public class BitmapDistinctByFlink {
             current.f0.add(in.f2);
 
             long processingTime = ctx.timerService().currentProcessingTime();
-            if(current.f1 == null || current.f1 + 10000 <= processingTime) {
+            if (current.f1 == null || current.f1 + 10000 <= processingTime) {
                 current.f1 = processingTime;
                 // write the state back
                 state.update(current);

@@ -6,6 +6,7 @@ package com.umxwe.common.param;
  * @Author owen(umxwe))
  * @Date 2020/12/16
  */
+
 import org.apache.flink.annotation.PublicEvolving;
 
 import java.io.Serializable;

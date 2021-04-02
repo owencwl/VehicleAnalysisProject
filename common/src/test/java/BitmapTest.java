@@ -1,9 +1,9 @@
 import com.umxwe.common.elastic.bitmap.BitmapUtil;
 import com.umxwe.common.utils.TimeUtils;
+
 import org.elasticsearch.search.aggregations.bucket.geogrid.GeoTileUtils;
 import org.junit.Test;
 import org.roaringbitmap.RoaringBitmap;
-import org.roaringbitmap.longlong.LongUtils;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 import org.xerial.snappy.Snappy;
 
@@ -14,7 +14,11 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * @ClassName BitmapTest
@@ -75,60 +79,57 @@ public class BitmapTest {
 //            System.out.println(i);
 //        }
 
-        long count=300000;
-        Roaring64Bitmap roaring64Bitmap=new Roaring64Bitmap();
-        while (count>=0){
-             long num=new Random().nextLong();
+        long count = 300000;
+        Roaring64Bitmap roaring64Bitmap = new Roaring64Bitmap();
+        while (count >= 0) {
+            long num = new Random().nextLong();
             roaring64Bitmap.add(num);
             count--;
         }
         roaring64Bitmap.runOptimize();
 
-        count=300000;
-        Roaring64Bitmap roaring64Bitmap2=new Roaring64Bitmap();
-        while (count>=0){
-            long num=new Random().nextLong();
+        count = 300000;
+        Roaring64Bitmap roaring64Bitmap2 = new Roaring64Bitmap();
+        while (count >= 0) {
+            long num = new Random().nextLong();
             roaring64Bitmap2.add(num);
             count--;
         }
         roaring64Bitmap2.runOptimize();
 
-        long current=System.currentTimeMillis();
+        long current = System.currentTimeMillis();
         roaring64Bitmap.or(roaring64Bitmap2);
 
-        System.out.println("took:"+(System.currentTimeMillis()-current));
+        System.out.println("took:" + (System.currentTimeMillis() - current));
         System.out.println(roaring64Bitmap2);
-
-
-
 
 
     }
 
     @Test
     public void compressBitmapTest() throws IOException {
-        long count=5000000;
-        Roaring64Bitmap roaring64Bitmap=new Roaring64Bitmap();
-        while (count>=0){
-            long num=new Random().nextLong();
+        long count = 5000000;
+        Roaring64Bitmap roaring64Bitmap = new Roaring64Bitmap();
+        while (count >= 0) {
+            long num = new Random().nextLong();
             roaring64Bitmap.add(num);
             count--;
         }
         roaring64Bitmap.runOptimize();
-        System.out.println("compress before:"+getNetFileSizeDescription(BitmapUtil.serializeBitmap(roaring64Bitmap).length));
+        System.out.println("compress before:" + getNetFileSizeDescription(BitmapUtil.serializeBitmap(roaring64Bitmap).length));
 
-        byte[] compressBitmap= Snappy.compress(BitmapUtil.serializeBitmap(roaring64Bitmap));
-        System.out.println("compress after:"+getNetFileSizeDescription(compressBitmap.length));
+        byte[] compressBitmap = Snappy.compress(BitmapUtil.serializeBitmap(roaring64Bitmap));
+        System.out.println("compress after:" + getNetFileSizeDescription(compressBitmap.length));
     }
+
     @Test
-    public void xorandnotTest(){
+    public void xorandnotTest() {
         RoaringBitmap a = RoaringBitmap.bitmapOf(1, 2, 3, 1000);
         RoaringBitmap b = RoaringBitmap.bitmapOf(3, 5, 6, 9);
         System.out.println("交集intersection:" + RoaringBitmap.and(a, b));
         System.out.println("异或xor:" + RoaringBitmap.xor(a, b));
         System.out.println("不同的andnot:" + RoaringBitmap.andNot(a, b));
     }
-
 
 
     /**
@@ -158,6 +159,7 @@ public class BitmapTest {
         }
         return bytes.toString();
     }
+
     @Test
     public void RoaringBitmapTest() throws Exception {
 
@@ -241,10 +243,10 @@ public class BitmapTest {
 
         System.out.println(GeoTileUtils.longEncode(decode));
 
-        System.out.println( GeoTileUtils.stringEncode(encode)
+        System.out.println(GeoTileUtils.stringEncode(encode)
         );
 
-        String fromJedi="陕JOORRU";
+        String fromJedi = "陕JOORRU";
         byte[] fromRawData = fromJedi.getBytes();
 
         BigInteger number = new BigInteger(fromRawData);
@@ -254,15 +256,15 @@ public class BitmapTest {
         byte[] toRawData = number.toByteArray();
         String toJedi = new String(toRawData);
 
-        System.out.println("The new String is: "+toJedi);
+        System.out.println("The new String is: " + toJedi);
 
 
-        String code="AQcAAAAAAAAAAAIAAQAAAIBkAAIAAVwAAAEAAAQAAJeRi4UEAAAAAGRcAIVlAAAAAAAAAAAAAgAAAABbWgQAAAAAZFwAi1oBAAAAAAAAAAQAAAAAZFwAi1sCAAAAAAAAAAQAAAAAZFwAkVEDAAAAAAAAAAQAAAAAZFwAl0cEAAAAAAAAAAQAAAAAZFwBVgMFAAAAAAAAAAQAAAAAgJf6V7AGAAAAAAAAAAEAAAD+CQAAAAECAQAAAGhiAQIBAAAAfIABAgEAAAB4UQECAQAAALAxAQICAAAAlAbABwECAQAAAPgmAQIBAAAARg8AAAcAAAAAAAAAAAAAAAYAAAA=";
+        String code = "AQcAAAAAAAAAAAIAAQAAAIBkAAIAAVwAAAEAAAQAAJeRi4UEAAAAAGRcAIVlAAAAAAAAAAAAAgAAAABbWgQAAAAAZFwAi1oBAAAAAAAAAAQAAAAAZFwAi1sCAAAAAAAAAAQAAAAAZFwAkVEDAAAAAAAAAAQAAAAAZFwAl0cEAAAAAAAAAAQAAAAAZFwBVgMFAAAAAAAAAAQAAAAAgJf6V7AGAAAAAAAAAAEAAAD+CQAAAAECAQAAAGhiAQIBAAAAfIABAgEAAAB4UQECAQAAALAxAQICAAAAlAbABwECAQAAAPgmAQIBAAAARg8AAAcAAAAAAAAAAAAAAAYAAAA=";
 
 
-        Roaring64Bitmap roaring64Bitmap =new Roaring64Bitmap();
+        Roaring64Bitmap roaring64Bitmap = new Roaring64Bitmap();
 
-        byte[] bytes=code.getBytes();
+        byte[] bytes = code.getBytes();
         System.out.println(bytes);
         roaring64Bitmap.deserialize(ByteBuffer.wrap(bytes));
 
@@ -273,9 +275,7 @@ public class BitmapTest {
 
     public long encodeStringToLong(String str) {
 
-        Map<String,Integer> provice=new HashMap<>();
-
-
+        Map<String, Integer> provice = new HashMap<>();
 
 
         return 0;
@@ -283,8 +283,6 @@ public class BitmapTest {
     }
 
     public String decodeLongToString(Long number) {
-
-
 
 
         return "";

@@ -1,14 +1,7 @@
 package com.umxwe.genetedata.entity;
 
-import com.umxwe.genetedata.utils.RandomDataUtil;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -70,7 +63,6 @@ public class VehicleTrajectoryEntity {
     private String vehicleColorDesc;//车辆颜色描述
 
 
-
     private String DeviceID;//抓拍设备id
     private String address;//抓拍设备地址
     private String deviceName;//抓拍设备名称
@@ -84,34 +76,34 @@ public class VehicleTrajectoryEntity {
 
     public Map<String, Object> toMap() {
 
-        Map<String, Object> vehiclemap=new HashMap<>();
-        vehiclemap.put("PlateClass",this.getPlateClass());
-        vehiclemap.put("PlateColor",this.getPlateColor());
-        vehiclemap.put("plateClassDesc",this.getPlateClassDesc());
-        vehiclemap.put("plateColorDesc",this.getPlateColorDesc());
-        vehiclemap.put("PlateNo",this.getPlateNo());
-        vehiclemap.put("VehicleBrand",this.getVehicleBrand());
-        vehiclemap.put("VehicleClass",this.getVehicleClass());
-        vehiclemap.put("VehicleColor",this.getVehicleColor());
-        vehiclemap.put("vehicleBrandDesc",this.getVehicleBrandDesc());
-        vehiclemap.put("vehicleClassDesc",this.getVehicleClassDesc());
-        vehiclemap.put("vehicleColorDesc",this.getVehicleColorDesc());
-        vehiclemap.put("DeviceID",this.getDeviceID());
-        vehiclemap.put("address",this.getAddress());
-        vehiclemap.put("deviceName",this.getDeviceName());
-        vehiclemap.put("shotTime",this.getShotTime());
-        vehiclemap.put("rowKey",this.getRowKey());
-        vehiclemap.put("shotPlaceLatitude",this.getShotPlaceLatitude());
-        vehiclemap.put("shotPlaceLongitude",this.getShotPlaceLongitude());
-        vehiclemap.put("location",this.getShotPlaceLatitude()+","+this.getShotPlaceLongitude());
+        Map<String, Object> vehiclemap = new HashMap<>();
+        vehiclemap.put("PlateClass", this.getPlateClass());
+        vehiclemap.put("PlateColor", this.getPlateColor());
+        vehiclemap.put("plateClassDesc", this.getPlateClassDesc());
+        vehiclemap.put("plateColorDesc", this.getPlateColorDesc());
+        vehiclemap.put("PlateNo", this.getPlateNo());
+        vehiclemap.put("VehicleBrand", this.getVehicleBrand());
+        vehiclemap.put("VehicleClass", this.getVehicleClass());
+        vehiclemap.put("VehicleColor", this.getVehicleColor());
+        vehiclemap.put("vehicleBrandDesc", this.getVehicleBrandDesc());
+        vehiclemap.put("vehicleClassDesc", this.getVehicleClassDesc());
+        vehiclemap.put("vehicleColorDesc", this.getVehicleColorDesc());
+        vehiclemap.put("DeviceID", this.getDeviceID());
+        vehiclemap.put("address", this.getAddress());
+        vehiclemap.put("deviceName", this.getDeviceName());
+        vehiclemap.put("shotTime", this.getShotTime());
+        vehiclemap.put("rowKey", this.getRowKey());
+        vehiclemap.put("shotPlaceLatitude", this.getShotPlaceLatitude());
+        vehiclemap.put("shotPlaceLongitude", this.getShotPlaceLongitude());
+        vehiclemap.put("location", this.getShotPlaceLatitude() + "," + this.getShotPlaceLongitude());
         return vehiclemap;
     }
 
 
     public VehicleTrajectoryEntity() {
         Integer deviceId = new Random().nextInt(100);
-        this.setDeviceID("43120000001190000"+deviceId);
-        this.setAddress("湖南省怀化市溆浦县卢峰镇"+deviceId);
+        this.setDeviceID("43120000001190000" + deviceId);
+        this.setAddress("湖南省怀化市溆浦县卢峰镇" + deviceId);
         this.setDeviceName("摄像头设备" + deviceId);
 
         /**
@@ -120,33 +112,34 @@ public class VehicleTrajectoryEntity {
         long rangebegin = Timestamp.valueOf("2021-01-01 00:00:00").getTime();
         long rangeend = Timestamp.valueOf("2021-01-31 00:59:59").getTime();
         long diff = rangeend - rangebegin + 1;
-        Timestamp rand = new Timestamp(rangebegin + (long)(Math.random() * diff));
+        Timestamp rand = new Timestamp(rangebegin + (long) (Math.random() * diff));
         rand.getTime();
 //        this.setShotTime(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(rand.toLocalDateTime()));
         this.setShotTime(rand.getTime());
-        double lat=randomLonLat("Lat");
-        double lon=randomLonLat("Lon");
+        double lat = randomLonLat("Lat");
+        double lon = randomLonLat("Lon");
 
         this.setShotPlaceLatitude(lat);
         this.setShotPlaceLongitude(lon);
-        this.setLocation(lat+","+lon);
+        this.setLocation(lat + "," + lon);
 
     }
+
     /**
-     * @Title: randomLonLat
-     * @Description: 在矩形内随机生成经纬度
-     *  MinLon：最小经度  MaxLon： 最大经度   MinLat：最小纬度   MaxLat：最大纬度    type：设置返回经度还是纬度
      * @return
      * @throws
+     * @Title: randomLonLat
+     * @Description: 在矩形内随机生成经纬度 MinLon：最小经度  MaxLon： 最大经度   MinLat：最小纬度   MaxLat：最大纬度
+     * type：设置返回经度还是纬度
      */
     public double randomLonLat(String type) {
         //默认长沙区域的经纬度
         //112.821726,28.323551 望城西北角
         //113.182198,28.063764 高铁南站东南角
-        double MinLon=112.821726;
-        double MaxLon=113.182198;
-        double MinLat=28.063764;
-        double MaxLat=28.323551;
+        double MinLon = 112.821726;
+        double MaxLon = 113.182198;
+        double MinLat = 28.063764;
+        double MaxLat = 28.323551;
         BigDecimal db = new BigDecimal(Math.random() * (MaxLon - MinLon) + MinLon);
         double lon = db.setScale(6, BigDecimal.ROUND_HALF_UP).doubleValue();// 小数后6位
         db = new BigDecimal(Math.random() * (MaxLat - MinLat) + MinLat);

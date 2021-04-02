@@ -1,6 +1,7 @@
 package com.umxwe.common.source;
 
 import com.umxwe.common.param.Params;
+
 import org.apache.flink.table.api.Table;
 
 public interface SourceConnector {
@@ -10,7 +11,7 @@ public interface SourceConnector {
      *
      * @return
      */
-     Params configure();
+    Params configure();
 
 
     /**

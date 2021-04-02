@@ -31,8 +31,8 @@ public class BitmapUtil {
             }
         });
 
-        Iterator<Long> iterator=roaring64Bitmap.iterator();
-        while (iterator.hasNext()){
+        Iterator<Long> iterator = roaring64Bitmap.iterator();
+        while (iterator.hasNext()) {
             System.out.println(iterator.next());
         }
 
@@ -93,8 +93,7 @@ public class BitmapUtil {
      */
     public static Roaring64Bitmap deserializeBitmap(byte[] arr) {
         Roaring64Bitmap roaringBitmap = new Roaring64Bitmap();
-        try
-        {
+        try {
             roaringBitmap.deserialize(ByteBuffer.wrap(arr));
         } catch (IOException e) {
             LOG.error("deserializeBitmap error", e);
@@ -109,8 +108,7 @@ public class BitmapUtil {
      * @return
      */
     public static byte[] serializeBitmap(Roaring64Bitmap roaringBitmap) {
-        try
-        {
+        try {
             long sizeInBytesL = roaringBitmap.serializedSizeInBytes();
             if (sizeInBytesL >= Integer.MAX_VALUE) {
                 throw new UnsupportedOperationException();

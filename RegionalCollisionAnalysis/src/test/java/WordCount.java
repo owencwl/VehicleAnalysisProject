@@ -7,7 +7,7 @@ import java.io.Serializable;
  * @Date 2021/2/18
  */
 
-public  class WordCount implements Serializable {
+public class WordCount implements Serializable {
     public int number;
     public String word;
     public int frequency;

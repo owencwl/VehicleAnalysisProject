@@ -9,6 +9,7 @@ package com.umxwe.common.source.elasticsearch;
 
 import com.umxwe.common.param.Params;
 import com.umxwe.common.source.elasticsearch.param.ElasticSearchSourceParams;
+
 import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.flink.api.common.io.DefaultInputSplitAssigner;
 import org.apache.flink.api.common.io.NonParallelInput;
@@ -22,7 +23,11 @@ import org.apache.flink.core.io.GenericInputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
 import org.apache.flink.types.Row;
 import org.apache.http.HttpHost;
-import org.elasticsearch.action.search.*;
+import org.elasticsearch.action.search.ClearScrollRequest;
+import org.elasticsearch.action.search.ClearScrollResponse;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
@@ -45,6 +50,7 @@ import java.util.stream.Collectors;
 
 /**
  * 本抽象类提供ES的batch读取，而stream的方式目前flink还没有实现方案，初步使用translog来监听es形成stream
+ *
  * @param <IN> 读取es数据转化为IN，一般使用org.apache.flink.types.Row
  */
 public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<IN, GenericInputSplit> implements ResultTypeQueryable<Row> {
@@ -63,8 +69,7 @@ public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<I
     private transient Scroll scroll;
 
     /**
-     * 每次请求的回复。
-     * 当本次的回复的所有hits都被遍历完后，调用nextSearchResponse()获取下一个
+     * 每次请求的回复。 当本次的回复的所有hits都被遍历完后，调用nextSearchResponse()获取下一个
      */
     private transient SearchResponse searchResponse;
 
@@ -140,6 +145,7 @@ public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<I
 
     /**
      * refer to GenericInputFormat.java
+     *
      * @param numSplits
      * @return
      * @throws IOException
@@ -246,6 +252,7 @@ public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<I
 
     /**
      * 判断是否已到最后一项
+     *
      * @return
      * @throws IOException
      */
@@ -274,6 +281,7 @@ public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<I
 
     /**
      * 返回下一条记录，同时可以提供格式转换功能，需自定义实现
+     *
      * @param reuse
      * @return
      * @throws IOException
@@ -298,6 +306,7 @@ public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<I
 
     /**
      * 关闭es的连接
+     *
      * @throws IOException
      */
     @Override
@@ -311,6 +320,7 @@ public abstract class ElasticsearchInputFormatBase<IN> extends RichInputFormat<I
 
     /**
      * 清除es滚动查询记录
+     *
      * @throws IOException
      */
     private void clearScroll() throws IOException {

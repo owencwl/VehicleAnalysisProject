@@ -12,27 +12,29 @@ import java.util.concurrent.Executors;
 public class ThreadPoolManager {
     private static ThreadPoolManager tpm;
     private transient ExecutorService newCacheThreadPool;
-    private  int poolcapicity;
+    private int poolcapicity;
     private transient ExecutorService newFixThreadPool;
 
 
     public ThreadPoolManager() {
     }
-    public static ThreadPoolManager getInstance(){
 
-        if(tpm==null){
-            synchronized (ThreadPoolManager.class){
-                if(tpm==null){
-                    tpm=new ThreadPoolManager();
+    public static ThreadPoolManager getInstance() {
+
+        if (tpm == null) {
+            synchronized (ThreadPoolManager.class) {
+                if (tpm == null) {
+                    tpm = new ThreadPoolManager();
                 }
             }
         }
         return tpm;
     }
-    public ExecutorService getExecutorServer(){
-        if(newCacheThreadPool==null){
-            synchronized (ThreadPoolManager.class){
-                if(newCacheThreadPool==null){
+
+    public ExecutorService getExecutorServer() {
+        if (newCacheThreadPool == null) {
+            synchronized (ThreadPoolManager.class) {
+                if (newCacheThreadPool == null) {
 
                     //newFixedThreadPool newCachedThreadPool
                     newCacheThreadPool = Executors.newCachedThreadPool();
@@ -41,18 +43,19 @@ public class ThreadPoolManager {
         }
         return newCacheThreadPool;
     }
-    public ExecutorService getExecutorServer(int poolcapcity){
-        return getExecutorService(poolcapcity,false);
+
+    public ExecutorService getExecutorServer(int poolcapcity) {
+        return getExecutorService(poolcapcity, false);
     }
 
     private synchronized ExecutorService getExecutorService(int poolcapcity, boolean clodeOld) {
-        if(newFixThreadPool==null || this.poolcapicity!=poolcapcity){
-            if(newFixThreadPool!=null && clodeOld){
+        if (newFixThreadPool == null || this.poolcapicity != poolcapcity) {
+            if (newFixThreadPool != null && clodeOld) {
                 newFixThreadPool.shutdown();
             }
 
-            newFixThreadPool=Executors.newFixedThreadPool(poolcapcity);
-            this.poolcapicity=poolcapcity;
+            newFixThreadPool = Executors.newFixedThreadPool(poolcapcity);
+            this.poolcapicity = poolcapcity;
         }
         return newFixThreadPool;
     }

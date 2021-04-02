@@ -6,6 +6,7 @@ package com.umxwe.common.hbase.utils;
  * @Author owen(umxwe)
  * @Date 2021/2/5
  */
+
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.util.HashMap;
@@ -65,7 +66,7 @@ public enum CType {
         return arg;
     }
 
-    public static byte[] toBytes(CType ctype, Object val){
+    public static byte[] toBytes(CType ctype, Object val) {
         byte[] bs = null;
         switch (ctype) {
             case STRING:

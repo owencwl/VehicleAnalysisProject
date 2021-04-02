@@ -8,11 +8,12 @@ package com.umxwe.common.param;
  */
 
 /**
- * Interface for the object, which need set/get parameters.
- * jdk1.8 support to default and static method
+ * Interface for the object, which need set/get parameters. jdk1.8 support to default and static
+ * method
+ *
  * @param <T> the type of the object
  */
-public interface WithParams<T>  {
+public interface WithParams<T> {
 
     Params getParams();
 

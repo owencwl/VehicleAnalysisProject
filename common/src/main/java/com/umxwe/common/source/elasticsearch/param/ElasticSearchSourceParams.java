@@ -1,10 +1,11 @@
 package com.umxwe.common.source.elasticsearch.param;
 
-import org.apache.flink.api.java.typeutils.RowTypeInfo;
-import org.elasticsearch.common.unit.TimeValue;
 import com.umxwe.common.param.ParamInfo;
 import com.umxwe.common.param.ParamInfoFactory;
 import com.umxwe.common.param.WithParams;
+
+import org.apache.flink.api.java.typeutils.RowTypeInfo;
+import org.elasticsearch.common.unit.TimeValue;
 
 /**
  * @ClassName ElasticSearchSourceParam
@@ -12,13 +13,13 @@ import com.umxwe.common.param.WithParams;
  * @Author owen(umxwe))
  * @Date 2020/12/18
  */
-public interface ElasticSearchSourceParams <T> extends WithParams<T> {
+public interface ElasticSearchSourceParams<T> extends WithParams<T> {
 
     /**
      * build httpHosts params
      */
     ParamInfo<String> HTTPHOSTS = ParamInfoFactory
-            .createParamInfo("HTTPHOSTS",String.class)
+            .createParamInfo("HTTPHOSTS", String.class)
             .setDescription("httpHosts")
             .setHasDefaultValue(null)
             .build();
@@ -63,7 +64,6 @@ public interface ElasticSearchSourceParams <T> extends WithParams<T> {
             .setDescription("es RowTypeInfo")
             .setHasDefaultValue("")
             .build();
-
 
 
 }

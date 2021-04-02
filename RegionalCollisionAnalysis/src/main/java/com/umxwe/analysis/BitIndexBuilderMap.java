@@ -2,7 +2,6 @@ package com.umxwe.analysis;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.flink.api.common.functions.RichMapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.calcite.shaded.com.google.common.hash.HashFunction;
 import org.apache.flink.calcite.shaded.com.google.common.hash.Hashing;
@@ -59,6 +58,7 @@ public class BitIndexBuilderMap extends RichMapFunction<Row, Tuple3<String, Stri
 
     /**
      * 把userId递增化,在redis中建立一个id映射关系
+     *
      * @param in
      * @return
      * @throws Exception
@@ -72,19 +72,19 @@ public class BitIndexBuilderMap extends RichMapFunction<Row, Tuple3<String, Stri
         RMap<String, String> rMap = redissonClient.getMap(mapKey);
         // 如果为空,生成一个bitIndex
         String bitIndexStr = rMap.get(plateNo);
-        if(StringUtils.isEmpty(bitIndexStr)) {
+        if (StringUtils.isEmpty(bitIndexStr)) {
             LOG.info("userId[{}]的bitIndex为空, 开始生成bitIndex", plateNo);
             RLock lock = redissonClient.getLock(GLOBAL_COUNTER_LOCKER_KEY);
-            try{
+            try {
                 lock.tryLock(60, TimeUnit.SECONDS);
                 // 再get一次
                 bitIndexStr = rMap.get(plateNo);
-                if(StringUtils.isEmpty(bitIndexStr)) {
+                if (StringUtils.isEmpty(bitIndexStr)) {
                     RAtomicLong atomic = redissonClient.getAtomicLong(GLOBAL_COUNTER_KEY);
                     bitIndexStr = String.valueOf(atomic.incrementAndGet());
                 }
                 rMap.put(plateNo, bitIndexStr);
-            }finally{
+            } finally {
                 lock.unlock();
             }
             LOG.info("plateNo[{}]的bitIndex生成结束, bitIndex: {}", plateNo, bitIndexStr);
@@ -96,7 +96,7 @@ public class BitIndexBuilderMap extends RichMapFunction<Row, Tuple3<String, Stri
 
     @Override
     public void close() throws Exception {
-        if(redissonClient != null) {
+        if (redissonClient != null) {
             redissonClient.shutdown();
         }
     }

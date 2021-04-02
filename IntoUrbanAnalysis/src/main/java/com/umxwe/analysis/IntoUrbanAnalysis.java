@@ -37,6 +37,6 @@ public class IntoUrbanAnalysis {
         QueryBuilder query1 = QueryBuilders.boolQuery()
                 .must(QueryBuilders.rangeQuery("shotTime").gte(start1).lte(end1));
 
-        QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("",""));
+        QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("", ""));
     }
 }

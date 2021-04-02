@@ -4,6 +4,7 @@ import com.umxwe.common.param.Params;
 import com.umxwe.common.source.SourceConnector;
 import com.umxwe.common.source.elasticsearch.param.ElasticSearchSourceParams;
 import com.umxwe.common.utils.DataSetConversionUtil;
+
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
@@ -32,7 +33,7 @@ public abstract class ElasticsearchSourceConnector implements SourceConnector {
         return null;
     }
 
-    public RowTypeInfo setRowTypeInfo(){
+    public RowTypeInfo setRowTypeInfo() {
         return null;
     }
 
@@ -42,9 +43,9 @@ public abstract class ElasticsearchSourceConnector implements SourceConnector {
         tEnv = BatchTableEnvironment.create(env);
 
         elasticSearchSourceParams = this.configure();
-        rowTypeInfo=this.setRowTypeInfo();
+        rowTypeInfo = this.setRowTypeInfo();
 
-        queryConditionStr=elasticSearchSourceParams.get(ElasticSearchSourceParams.QUERYCONDITIONSTR);
+        queryConditionStr = elasticSearchSourceParams.get(ElasticSearchSourceParams.QUERYCONDITIONSTR);
 
         esInputFormat = ElasticsearchInputFormat.builder(elasticSearchSourceParams)
                 .setQueryConditionStr(queryConditionStr)
@@ -58,7 +59,7 @@ public abstract class ElasticsearchSourceConnector implements SourceConnector {
         this.open();
         DataSource<Row> input = env.createInput(esInputFormat);
         Table table = DataSetConversionUtil.toTable(tEnv, input, rowTypeInfo.getFieldNames(), rowTypeInfo.getFieldTypes());
-        DataSetConversionUtil.fromTable(table,tEnv).print();
+        DataSetConversionUtil.fromTable(table, tEnv).print();
         return table;
     }
 

@@ -38,7 +38,7 @@ public class BitmapAggregatorFactory extends ValuesSourceAggregatorFactory {
 
     public BitmapAggregatorFactory(String name, ValuesSourceConfig config, QueryShardContext context,
                                    AggregatorFactory parent, AggregatorFactories.Builder subFactoriesBuilder, Map<String, Object> metadata) throws IOException {
-        super(name, config, context, parent, subFactoriesBuilder,metadata);
+        super(name, config, context, parent, subFactoriesBuilder, metadata);
     }
 
     static void registerAggregators(ValuesSourceRegistry.Builder builder) {
@@ -49,13 +49,13 @@ public class BitmapAggregatorFactory extends ValuesSourceAggregatorFactory {
 
     @Override
     protected Aggregator createUnmapped(SearchContext searchContext, Aggregator parent, Map<String, Object> metadata) throws IOException {
-        return new BitmapAggregator(name,  config, searchContext, parent,metadata);
+        return new BitmapAggregator(name, config, searchContext, parent, metadata);
 
     }
 
     @Override
     protected Aggregator doCreateInternal(SearchContext searchContext, Aggregator parent, CardinalityUpperBound cardinality, Map<String, Object> metadata) throws IOException {
-        return new BitmapAggregator(name, config, searchContext, parent,metadata);
+        return new BitmapAggregator(name, config, searchContext, parent, metadata);
 
     }
 }

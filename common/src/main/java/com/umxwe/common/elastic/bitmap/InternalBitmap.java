@@ -37,7 +37,7 @@ public class InternalBitmap extends InternalNumericMetricsAggregation.SingleValu
 
     private static final Logger LOG = LoggerFactory.getLogger(BitmapAggregator.class);
 
-    private  final Roaring64Bitmap sum;
+    private final Roaring64Bitmap sum;
 
     InternalBitmap(String name, Roaring64Bitmap sum, DocValueFormat formatter,
                    Map<String, Object> metaData) {
@@ -81,9 +81,11 @@ public class InternalBitmap extends InternalNumericMetricsAggregation.SingleValu
         LOG.info("InternalBitmap getValue: sum [{}]", sum);
         return sum == null ? 0 : sum.getLongCardinality();
     }
+
     @Override
     public byte[] getByteValue() {
-        return sum == null ? null : BitmapUtil.serializeBitmap(sum);  }
+        return sum == null ? null : BitmapUtil.serializeBitmap(sum);
+    }
 
 
     @Override
@@ -106,9 +108,9 @@ public class InternalBitmap extends InternalNumericMetricsAggregation.SingleValu
 //                longList.add(value);
 //            }
 //        });
-        builder.field(CommonFields.VALUE.getPreferredName(),BitmapUtil.serializeBitmap(sum));
+        builder.field(CommonFields.VALUE.getPreferredName(), BitmapUtil.serializeBitmap(sum));
 //        builder.field(CommonFields.VALUE.getPreferredName(),longList);
-        builder.field("Cardinality",sum.getLongCardinality());
+        builder.field("Cardinality", sum.getLongCardinality());
         return builder;
     }
 

@@ -5,7 +5,11 @@ import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
 import org.redisson.Redisson;
-import org.redisson.api.*;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RBucket;
+import org.redisson.api.RKeys;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 
@@ -48,6 +52,7 @@ public class RedissonOutputFormat extends RichOutputFormat<Tuple3<String, String
 
     /**
      * k,type,value
+     *
      * @param record
      * @throws IOException
      */
@@ -57,15 +62,15 @@ public class RedissonOutputFormat extends RichOutputFormat<Tuple3<String, String
         RKeys rKeys = redissonClient.getKeys();
         rKeys.delete(key);
         String keyType = record.f1;
-        if("STRING".equalsIgnoreCase(keyType)) {
+        if ("STRING".equalsIgnoreCase(keyType)) {
             String value = (String) record.f2;
             RBucket<String> rBucket = redissonClient.getBucket(key);
             rBucket.set(value);
-        } else if("MAP".equalsIgnoreCase(keyType)) {
+        } else if ("MAP".equalsIgnoreCase(keyType)) {
             Map<String, String> map = (Map<String, String>) record.f2;
             RMap<String, String> rMap = redissonClient.getMap(key);
             rMap.putAll(map);
-        } else if("ATOMICLONG".equalsIgnoreCase(keyType)) {
+        } else if ("ATOMICLONG".equalsIgnoreCase(keyType)) {
             long l = (long) record.f2;
             RAtomicLong atomic = redissonClient.getAtomicLong(key);
             atomic.set(l);
@@ -74,7 +79,7 @@ public class RedissonOutputFormat extends RichOutputFormat<Tuple3<String, String
 
     @Override
     public void close() throws IOException {
-        if(redissonClient != null) {
+        if (redissonClient != null) {
             redissonClient.shutdown();
         }
     }

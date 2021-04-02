@@ -6,6 +6,7 @@ package com.umxwe.common.param;
  * @Author owen(umxwe))
  * @Date 2020/12/16
  */
+
 import org.apache.flink.annotation.PublicEvolving;
 import org.apache.flink.util.Preconditions;
 
@@ -39,12 +40,12 @@ public class ParamInfo<V> {
     private final boolean isOptional;
     private final boolean hasDefaultValue;
     private final V defaultValue;
-    private final ParamValidator <V> validator;
-    private final Class <V> valueClass;
+    private final ParamValidator<V> validator;
+    private final Class<V> valueClass;
 
     ParamInfo(String name, String[] alias, String description, boolean isOptional,
               boolean hasDefaultValue, V defaultValue,
-              ParamValidator <V> validator, Class <V> valueClass) {
+              ParamValidator<V> validator, Class<V> valueClass) {
         this.name = name;
         this.alias = alias;
         this.description = description;
@@ -56,8 +57,8 @@ public class ParamInfo<V> {
     }
 
     /**
-     * Returns the name of the parameter. The name must be unique in the stage the ParamInfo
-     * belongs to.
+     * Returns the name of the parameter. The name must be unique in the stage the ParamInfo belongs
+     * to.
      *
      * @return the name of the parameter
      */
@@ -98,8 +99,8 @@ public class ParamInfo<V> {
      * default value of a parameter, the return of getDefaultValue may be {@code null} even when
      * this method returns true.
      *
-     * @return {@code true} if the com.umxwe.common.param is has a default value(even if it's a {@code null}), {@code
-     * false} otherwise
+     * @return {@code true} if the com.umxwe.common.param is has a default value(even if it's a
+     * {@code null}), {@code false} otherwise
      */
     public boolean hasDefaultValue() {
         return hasDefaultValue;
@@ -120,7 +121,7 @@ public class ParamInfo<V> {
      *
      * @return the validator to validate the value of the parameter.
      */
-    public ParamValidator <V> getValidator() {
+    public ParamValidator<V> getValidator() {
         return validator;
     }
 
@@ -129,7 +130,7 @@ public class ParamInfo<V> {
      *
      * @return the class of the com.umxwe.common.param value
      */
-    public Class <V> getValueClass() {
+    public Class<V> getValueClass() {
         return valueClass;
     }
 }

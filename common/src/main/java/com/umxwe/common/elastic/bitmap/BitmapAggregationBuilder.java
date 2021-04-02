@@ -23,13 +23,17 @@ import org.elasticsearch.common.io.stream.StreamInput;
 import org.elasticsearch.common.io.stream.StreamOutput;
 import org.elasticsearch.common.xcontent.ObjectParser;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.AggregatorFactories.Builder;
 import org.elasticsearch.search.aggregations.AggregatorFactory;
-import org.elasticsearch.search.aggregations.support.*;
+import org.elasticsearch.search.aggregations.support.CoreValuesSourceType;
 import org.elasticsearch.search.aggregations.support.ValuesSource.Bytes;
+import org.elasticsearch.search.aggregations.support.ValuesSourceAggregationBuilder;
+import org.elasticsearch.search.aggregations.support.ValuesSourceAggregatorFactory;
+import org.elasticsearch.search.aggregations.support.ValuesSourceConfig;
+import org.elasticsearch.search.aggregations.support.ValuesSourceRegistry;
+import org.elasticsearch.search.aggregations.support.ValuesSourceType;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,7 +42,8 @@ import java.util.Map;
 public class BitmapAggregationBuilder extends ValuesSourceAggregationBuilder.LeafOnly<Bytes, BitmapAggregationBuilder> {
 
     public static final String NAME = "bitmap";
-    public static final ObjectParser<BitmapAggregationBuilder, String> PARSER = ObjectParser.fromBuilder(BitmapAggregationBuilder.NAME,BitmapAggregationBuilder::new);
+    public static final ObjectParser<BitmapAggregationBuilder, String> PARSER = ObjectParser.fromBuilder(BitmapAggregationBuilder.NAME, BitmapAggregationBuilder::new);
+
     static {
         ValuesSourceAggregationBuilder.declareFields(PARSER, false, false, false);
     }
@@ -52,15 +57,16 @@ public class BitmapAggregationBuilder extends ValuesSourceAggregationBuilder.Lea
 //    }
 
     public BitmapAggregationBuilder(BitmapAggregationBuilder bitmapAggregationBuilder, Builder factoriesBuilder, Map<String, Object> metadata) {
-        super(bitmapAggregationBuilder,factoriesBuilder,metadata);
+        super(bitmapAggregationBuilder, factoriesBuilder, metadata);
     }
+
     public BitmapAggregationBuilder(String name) {
         super(name);
     }
 
     @Override
     protected AggregationBuilder shallowCopy(Builder factoriesBuilder, Map<String, Object> metadata) {
-        return new BitmapAggregationBuilder(this,factoriesBuilder,metadata);
+        return new BitmapAggregationBuilder(this, factoriesBuilder, metadata);
     }
 
     /**
@@ -82,7 +88,7 @@ public class BitmapAggregationBuilder extends ValuesSourceAggregationBuilder.Lea
 
     @Override
     protected ValuesSourceAggregatorFactory innerBuild(QueryShardContext queryShardContext, ValuesSourceConfig config, AggregatorFactory parent, Builder subFactoriesBuilder) throws IOException {
-        return new BitmapAggregatorFactory(name, config, queryShardContext, parent, subFactoriesBuilder,metadata);
+        return new BitmapAggregatorFactory(name, config, queryShardContext, parent, subFactoriesBuilder, metadata);
     }
 
 

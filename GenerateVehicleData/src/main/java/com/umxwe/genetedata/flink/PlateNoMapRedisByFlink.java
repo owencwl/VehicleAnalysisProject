@@ -1,35 +1,28 @@
 package com.umxwe.genetedata.flink;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.umxwe.common.factory.TableFactory;
 import com.umxwe.common.hbase.utils.MyHBase;
 import com.umxwe.common.hbase.utils.MyHTable;
-import com.umxwe.common.utils.DataSetConversionUtil;
+import com.umxwe.common.param.Params;
+import com.umxwe.common.source.hbase.HbaseSourceConnector;
+import com.umxwe.common.source.hbase.param.HbaseSourceParams;
 import com.umxwe.common.utils.DataStreamConversionUtil;
 import com.umxwe.genetedata.entity.VehicleEntity;
 import com.umxwe.genetedata.entity.VehicleTrajectoryEntity;
 import com.umxwe.genetedata.utils.RandomDataUtil;
-import org.apache.commons.lang.StringUtils;
+
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.io.TextInputFormat;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.ConfigConstants;
-import org.apache.flink.configuration.RestOptions;
 import org.apache.flink.connector.hbase.source.HBaseTableSource;
-import org.apache.flink.core.fs.Path;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
-import org.apache.flink.streaming.api.functions.windowing.AllWindowFunction;
-import org.apache.flink.streaming.api.windowing.windows.GlobalWindow;
 import org.apache.flink.streaming.connectors.elasticsearch.ElasticsearchSinkFunction;
 import org.apache.flink.streaming.connectors.elasticsearch.RequestIndexer;
 import org.apache.flink.streaming.connectors.elasticsearch7.ElasticsearchSink;
@@ -37,21 +30,9 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableSchema;
-import com.umxwe.common.param.Params;
-import com.umxwe.common.source.hbase.HbaseSourceConnector;
-import com.umxwe.common.source.hbase.param.HbaseSourceParams;
-import org.apache.flink.table.api.bridge.java.BatchTableEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
-import org.apache.flink.util.Collector;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.http.HttpHost;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -68,7 +49,11 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.redisson.Redisson;
-import org.redisson.api.*;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RBucket;
+import org.redisson.api.RKeys;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.slf4j.Logger;
@@ -76,7 +61,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * @ClassName PlateNoMapRedisByFlink
@@ -232,7 +221,7 @@ public class PlateNoMapRedisByFlink {
         httpHosts.add(new HttpHost("10.116.200.24", 9200, "http"));
 
         //重新运行需要注释这行code，不然会删除索引
-        createESIndex(httpHosts,"carindex");
+        createESIndex(httpHosts, "carindex");
 
         ElasticsearchSink.Builder<VehicleTrajectoryEntity> esSinkBuilder =
                 new ElasticsearchSink.Builder<>(httpHosts, new ElasticsearchSinkFunction<VehicleTrajectoryEntity>() {
@@ -250,7 +239,7 @@ public class PlateNoMapRedisByFlink {
                         indexer.add(createIndexRequest(element));
                     }
                 });
-        dataStream.map(new MapFunction<VehicleEntity,VehicleTrajectoryEntity>() {
+        dataStream.map(new MapFunction<VehicleEntity, VehicleTrajectoryEntity>() {
             @Override
             public VehicleTrajectoryEntity map(VehicleEntity value) throws Exception {
                 VehicleTrajectoryEntity vehicleTrajectoryEntity = new VehicleTrajectoryEntity();
@@ -266,14 +255,14 @@ public class PlateNoMapRedisByFlink {
                 vehicleTrajectoryEntity.setVehicleClassDesc(value.getVehicleClassDesc());
                 vehicleTrajectoryEntity.setVehicleColorDesc(value.getVehicleColorDesc());
 
-                String date=new SimpleDateFormat("yyyyMMdd").format(vehicleTrajectoryEntity.getShotTime());
-                int region=Math.abs((vehicleTrajectoryEntity.getDeviceID()+date).hashCode())%5;
+                String date = new SimpleDateFormat("yyyyMMdd").format(vehicleTrajectoryEntity.getShotTime());
+                int region = Math.abs((vehicleTrajectoryEntity.getDeviceID() + date).hashCode()) % 5;
 //                    int salt=Math.abs(new Long(vehicleTrajectoryEntity.getShotTime()).hashCode())%1000000;
-                String salt= RandomDataUtil.stringToMD5(Long.toString(vehicleTrajectoryEntity.getShotTime())).substring(0, 5);
-                String rowkey =region
-                        +date
-                        +value.getPlateNo().substring(1, 7)
-                        +salt;
+                String salt = RandomDataUtil.stringToMD5(Long.toString(vehicleTrajectoryEntity.getShotTime())).substring(0, 5);
+                String rowkey = region
+                        + date
+                        + value.getPlateNo().substring(1, 7)
+                        + salt;
 
                 vehicleTrajectoryEntity.setRowKey(rowkey);
                 return vehicleTrajectoryEntity;
@@ -284,9 +273,9 @@ public class PlateNoMapRedisByFlink {
 
     }
 
-    public static void createESIndex( List<HttpHost> httpHosts,String index) throws IOException {
+    public static void createESIndex(List<HttpHost> httpHosts, String index) throws IOException {
         RestHighLevelClient client =
-                new RestHighLevelClient( RestClient.builder(httpHosts.toArray(new HttpHost[httpHosts.size()])));
+                new RestHighLevelClient(RestClient.builder(httpHosts.toArray(new HttpHost[httpHosts.size()])));
         boolean recreate = true;
 
         // delete index
@@ -426,15 +415,15 @@ public class PlateNoMapRedisByFlink {
             RKeys rKeys = redissonClient.getKeys();
             rKeys.delete(key);
             String keyType = record.f1;
-            if("STRING".equalsIgnoreCase(keyType)) {
+            if ("STRING".equalsIgnoreCase(keyType)) {
                 String value = (String) record.f2;
                 RBucket<String> rBucket = redissonClient.getBucket(key);
                 rBucket.set(value);
-            } else if("MAP".equalsIgnoreCase(keyType)) {
+            } else if ("MAP".equalsIgnoreCase(keyType)) {
                 Map<String, String> map = (Map<String, String>) record.f2;
                 RMap<String, String> rMap = redissonClient.getMap(key);
                 rMap.putAll(map);
-            } else if("ATOMICLONG".equalsIgnoreCase(keyType)) {
+            } else if ("ATOMICLONG".equalsIgnoreCase(keyType)) {
                 long l = (long) record.f2;
                 RAtomicLong atomic = redissonClient.getAtomicLong(key);
                 atomic.set(l);

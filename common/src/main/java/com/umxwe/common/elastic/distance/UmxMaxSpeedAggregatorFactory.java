@@ -1,6 +1,7 @@
 package com.umxwe.common.elastic.distance;
 
 import com.alibaba.fastjson.JSON;
+
 import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.search.aggregations.Aggregator;
 import org.elasticsearch.search.aggregations.AggregatorFactories;

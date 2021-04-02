@@ -1,12 +1,9 @@
 import com.alibaba.fastjson.JSON;
-import org.apache.flink.api.common.functions.ReduceFunction;
+
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple1;
-import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
@@ -17,7 +14,6 @@ import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,34 +42,34 @@ public class flinktest {
                     }
                 })
                 .process(new KeyedProcessFunction<String, WordCount, WordCount>() {
-                    private ValueState<Map<String,RoaringBitmap>> state;
+                    private ValueState<Map<String, RoaringBitmap>> state;
 
                     @Override
                     public void open(Configuration parameters) throws Exception {
-                        state = getRuntimeContext().getState(new ValueStateDescriptor<>("myState", Types.MAP(Types.STRING,Types.GENERIC(RoaringBitmap.class))));
+                        state = getRuntimeContext().getState(new ValueStateDescriptor<>("myState", Types.MAP(Types.STRING, Types.GENERIC(RoaringBitmap.class))));
                     }
 
                     @Override
                     public void processElement(WordCount value, Context ctx, Collector<WordCount> out) throws Exception {
-                        logger.info("processElement:{}, key:{}", JSON.toJSONString(value),ctx.getCurrentKey());
+                        logger.info("processElement:{}, key:{}", JSON.toJSONString(value), ctx.getCurrentKey());
 
-                        Map<String,RoaringBitmap> current = state.value();
+                        Map<String, RoaringBitmap> current = state.value();
                         if (current == null) {
                             current = new HashMap<>();
 //                            current.f0 = new RoaringBitmap();
                         }
-                        if(current.containsKey(ctx.getCurrentKey())){
+                        if (current.containsKey(ctx.getCurrentKey())) {
                             current.get(ctx.getCurrentKey()).add(value.getFrequency());
-                        }else {
-                            current.put(ctx.getCurrentKey(),RoaringBitmap.bitmapOf(value.getFrequency()));
+                        } else {
+                            current.put(ctx.getCurrentKey(), RoaringBitmap.bitmapOf(value.getFrequency()));
                         }
 
 
                         long processingTime = ctx.timerService().currentProcessingTime();
-                        if(current.isEmpty() ||  current.get(ctx.getCurrentKey()).getLongCardinality() + 10000 <= processingTime) {
+                        if (current.isEmpty() || current.get(ctx.getCurrentKey()).getLongCardinality() + 10000 <= processingTime) {
                             // write the state back
                             state.update(current);
-                            ctx.timerService().registerProcessingTimeTimer(current.get(ctx.getCurrentKey()).getLongCardinality()+ 10000);
+                            ctx.timerService().registerProcessingTimeTimer(current.get(ctx.getCurrentKey()).getLongCardinality() + 10000);
                         } else {
                             state.update(current);
                         }
@@ -83,7 +79,7 @@ public class flinktest {
                     @Override
                     public void onTimer(long timestamp, OnTimerContext ctx, Collector<WordCount> out) throws Exception {
                         String key = ctx.getCurrentKey();
-                        Map<String,RoaringBitmap> result = state.value();
+                        Map<String, RoaringBitmap> result = state.value();
                         logger.info("result:{}", JSON.toJSONString(result));
 //                        RoaringBitmap temp=new RoaringBitmap();
 //                        for (Map.Entry<String,RoaringBitmap> item:result.entrySet()

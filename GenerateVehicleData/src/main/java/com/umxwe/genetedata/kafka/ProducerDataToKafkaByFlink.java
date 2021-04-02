@@ -2,7 +2,9 @@ package com.umxwe.genetedata.kafka;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import com.umxwe.genetedata.utils.KafkaUtils;
+
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
@@ -10,7 +12,6 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @ClassName ProducerDataToKafkaByFlink
@@ -20,7 +21,7 @@ import java.util.concurrent.ExecutionException;
  */
 public class ProducerDataToKafkaByFlink {
     public static void main(String[] args) throws Exception {
-        String servers="itserver23:6667,itserver22:6667,itserver21:6667";
+        String servers = "itserver23:6667,itserver22:6667,itserver21:6667";
         String topic = "vehicleentity";
 
         // create kafka topic if not exists.

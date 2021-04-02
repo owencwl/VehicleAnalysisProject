@@ -15,13 +15,13 @@
             <groupId>umxbigdata</groupId>
             <artifactId>common</artifactId>
             <version>1.0-SNAPSHOT</version>
-<!--            <scope>compile</scope>-->
+            <!--            <scope>compile</scope>-->
         </dependency>
         <dependency>
             <groupId>umxbigdata</groupId>
             <artifactId>GenerateVehicleData</artifactId>
             <version>1.0-SNAPSHOT</version>
-<!--            <scope>compile</scope>-->
+            <!--            <scope>compile</scope>-->
         </dependency>
     </dependencies>
 
@@ -80,7 +80,8 @@
                     <archive>
                         <manifest>
                             <!-- 可以设置jar包的入口类(可选) -->
-                            <mainClass>com.umxwe.fakeplatevehicle.FakePlateVehicleByFlink</mainClass>
+                            <mainClass>com.umxwe.fakeplatevehicle.FakePlateVehicleByFlink
+                            </mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -96,8 +97,6 @@
             </plugin>
         </plugins>
     </build>
-
-
 
 
 </project>

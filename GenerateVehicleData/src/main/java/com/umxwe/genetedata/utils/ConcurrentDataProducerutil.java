@@ -1,12 +1,13 @@
 package com.umxwe.genetedata.utils;
 
 
-import com.umxwe.genetedata.threadpool.ThreadPoolManager;
 import com.umxwe.common.hbase.exception.HBaseInsertException;
+import com.umxwe.common.utils.TimeUtils;
+import com.umxwe.genetedata.threadpool.ThreadPoolManager;
+
 import org.apache.hadoop.hbase.client.Put;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.umxwe.common.utils.TimeUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,22 +70,21 @@ public class ConcurrentDataProducerutil {
         int dealSize = 2000;
 
         //分配
-        for(int i=0;i<= preThreadNum;i++,index+=dealSize){
+        for (int i = 0; i <= preThreadNum; i++, index += dealSize) {
             int start = index;
-            if(start>=listNum) break;
+            if (start >= listNum) break;
             int end = start + dealSize;
-            end = end>listNum ? listNum : end;
-            futureList.add(executorService.submit(new CallableTask(start,end,t)));
+            end = end > listNum ? listNum : end;
+            futureList.add(executorService.submit(new CallableTask(start, end, t)));
 
 //            FutureTask<List<T>> futureTask = new FutureTask<List<T>>(new CallableTask(list,start,end));
         }
 
 
-
         for (Future<List<T>> future : futureList) {
             while (true) {
                 if (future.isDone() && !future.isCancelled()) {
-                    List<T> futureResultList =  future.get();//获取结果
+                    List<T> futureResultList = future.get();//获取结果
                     list.addAll(futureResultList);
                     break;
                 } else {
@@ -93,7 +93,7 @@ public class ConcurrentDataProducerutil {
                 }
             }
         }
-        logger.info("多线程生成原始数据总耗时： "+TimeUtils.timeInterval()+" ms");
+        logger.info("多线程生成原始数据总耗时： " + TimeUtils.timeInterval() + " ms");
 
         return list;
     }
@@ -143,11 +143,11 @@ public class ConcurrentDataProducerutil {
             countDownLatch.await();
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             executorService.shutdown();
         }
 
-        if(exceptions.size()>0){
+        if (exceptions.size() > 0) {
             HBaseInsertException insertExceptor = new HBaseInsertException(String.format("put 数据到表%s失败", hbaseTable));
             insertExceptor.addSuppresseds(exceptions);
             throw insertExceptor;
@@ -191,15 +191,15 @@ public class ConcurrentDataProducerutil {
         private int num;
         private Class<T> bean;
 
-        public CallableTask(int start,int end,Class<T> bean) {
-            this.num=end-start;
-            this.bean=bean;
+        public CallableTask(int start, int end, Class<T> bean) {
+            this.num = end - start;
+            this.bean = bean;
         }
 
 
         @Override
         public List<T> call() throws Exception {
-            return ConcurrentDataProducerutil.producerListData(num,bean);
+            return ConcurrentDataProducerutil.producerListData(num, bean);
         }
     }
 }

@@ -6,9 +6,23 @@ package com.umxwe.common.hbase.utils;
  * @Author owen(umxwe)
  * @Date 2021/2/5
  */
+
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.*;
-import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.Cell;
+import org.apache.hadoop.hbase.CellUtil;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.compress.Compression;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
@@ -110,11 +124,12 @@ public class MyHBase {
     }
 
     /**
-     *  获取myhtable对象， 当表不存在时，自动创建表
-     * @param namespace     表的命名空间
-     * @param t             POJO类
-     * @param autoflush     写入数据是是否自动autoflush, 默认为true，为false时，速度会更快
-     * @param compressName  压缩算法
+     * 获取myhtable对象， 当表不存在时，自动创建表
+     *
+     * @param namespace    表的命名空间
+     * @param t            POJO类
+     * @param autoflush    写入数据是是否自动autoflush, 默认为true，为false时，速度会更快
+     * @param compressName 压缩算法
      * @param <T>
      * @return
      * @throws IOException
@@ -205,7 +220,8 @@ public class MyHBase {
      * 通过表名、表定义字符串创建表
      *
      * @param name      表名
-     * @param defString 表字段类型定义例如  c1:Name:STRING,c2:Address:STRING,c3:Age:INT  表示c1列，属性名字为name, 类型是STRING.
+     * @param defString 表字段类型定义例如  c1:Name:STRING,c2:Address:STRING,c3:Age:INT  表示c1列，属性名字为name,
+     *                  类型是STRING.
      * @throws IOException
      */
     public void createTable(String name, String defString, Compression.Algorithm compress) throws IOException {
@@ -247,9 +263,11 @@ public class MyHBase {
         admin.close();
         con.close();
     }
+
     public void createMetaTable(String namespace, Class<?> t) throws IOException {
         this.createMetaTable(tableName(namespace, t), this.getDefinitionString(t));
     }
+
     public void createMetaTable(String name, String defString) throws IOException {
         Connection con = this.getConnection();
         Admin admin = con.getAdmin();
@@ -269,7 +287,7 @@ public class MyHBase {
         Result r1 = meta.get(g1);
         if (r1 != null && !r1.isEmpty()) {
             logger.info("the table " + name + " has already exist in meta info table");
-        }else {
+        } else {
             // write table meta data to meta table
             Put p1 = new Put(Bytes.toBytes(name));
             p1.addColumn(Bytes.toBytes(META_FAMILY), Bytes.toBytes(META_COLUMN), Bytes.toBytes(defString));
@@ -280,7 +298,6 @@ public class MyHBase {
         admin.close();
         con.close();
     }
-
 
 
     /**

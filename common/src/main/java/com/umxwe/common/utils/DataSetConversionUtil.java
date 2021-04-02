@@ -6,6 +6,7 @@ package com.umxwe.common.utils;
  * @Author owen(umxwe))
  * @Date 2020/12/16
  */
+
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
@@ -26,24 +27,23 @@ public class DataSetConversionUtil {
     /**
      * Convert the given Table to {@link DataSet}<{@link Row}>.
      *
-     * @param table     the Table to convert.
+     * @param table the Table to convert.
      * @return the converted DataSet.
      */
-    public static DataSet <Row> fromTable(Table table,BatchTableEnvironment tEnv) {
+    public static DataSet<Row> fromTable(Table table, BatchTableEnvironment tEnv) {
         return tEnv.toDataSet(table, Row.class);
     }
 
     /**
      * Convert the given DataSet into a Table with specified TableSchema.
      *
-     * @param data      the DataSet to convert.
-     * @param schema    the specified TableSchema.
+     * @param data   the DataSet to convert.
+     * @param schema the specified TableSchema.
      * @return the converted Table.
      */
-    public static Table toTable(BatchTableEnvironment tEnv,DataSet <Row> data, TableSchema schema) {
-        return toTable(tEnv,data, schema.getFieldNames(), schema.getFieldTypes());
+    public static Table toTable(BatchTableEnvironment tEnv, DataSet<Row> data, TableSchema schema) {
+        return toTable(tEnv, data, schema.getFieldNames(), schema.getFieldTypes());
     }
-
 
 
     /**
@@ -51,12 +51,12 @@ public class DataSetConversionUtil {
      *
      * @param data     the DataSet to convert.
      * @param colNames the specified colNames.
-     * @param colTypes the specified colTypes. This variable is used only when the
-     *                 DataSet is produced by a function and Flink cannot determine
-     *                 automatically what the produced type is.
+     * @param colTypes the specified colTypes. This variable is used only when the DataSet is
+     *                 produced by a function and Flink cannot determine automatically what the
+     *                 produced type is.
      * @return the converted Table.
      */
-    public static Table toTable(BatchTableEnvironment tEnv,DataSet<Row> data, String[] colNames, TypeInformation <?>[] colTypes) {
+    public static Table toTable(BatchTableEnvironment tEnv, DataSet<Row> data, String[] colNames, TypeInformation<?>[] colTypes) {
         try {
             // Try to add row type information for the dataset to be converted.
             // In most case, this keeps us from the rolling back logic in the catch block,
@@ -71,13 +71,13 @@ public class DataSetConversionUtil {
                 //pass
             }
 
-            return toTable( tEnv,data, colNames);
+            return toTable(tEnv, data, colNames);
         } catch (ValidationException ex) {
             if (null == colTypes) {
                 throw ex;
             } else {
-                DataSet <Row> t = getDataSetWithExplicitTypeDefine(data, colNames, colTypes);
-                return toTable(tEnv,t, colNames);
+                DataSet<Row> t = getDataSetWithExplicitTypeDefine(data, colNames, colTypes);
+                return toTable(tEnv, t, colNames);
             }
         }
     }
@@ -89,7 +89,7 @@ public class DataSetConversionUtil {
      * @param colNames the specified colNames.
      * @return the converted Table.
      */
-    public static Table toTable(BatchTableEnvironment tEnv,DataSet <Row> data, String[] colNames) {
+    public static Table toTable(BatchTableEnvironment tEnv, DataSet<Row> data, String[] colNames) {
 //        ExecutionEnvironment env = ExecutionEnvironment.getExecutionEnvironment();
 //        BatchTableEnvironment tEnv = BatchTableEnvironment.create(env);
 
@@ -113,14 +113,14 @@ public class DataSetConversionUtil {
      * @param colTypes the specified colTypes
      * @return the DataSet with type information hint.
      */
-    private static DataSet <Row> getDataSetWithExplicitTypeDefine(
-            DataSet <Row> data,
+    private static DataSet<Row> getDataSetWithExplicitTypeDefine(
+            DataSet<Row> data,
             String[] colNames,
-            TypeInformation <?>[] colTypes) {
+            TypeInformation<?>[] colTypes) {
 
-        DataSet <Row> r = data
+        DataSet<Row> r = data
                 .map(
-                        new MapFunction <Row, Row>() {
+                        new MapFunction<Row, Row>() {
                             private static final long serialVersionUID = 4962235907261477641L;
 
                             @Override
@@ -135,8 +135,8 @@ public class DataSetConversionUtil {
     }
 
     /**
-     * Find the index of <code>targetCol</code> in string array <code>tableCols</code>. It will ignore the case of the
-     * tableCols.
+     * Find the index of <code>targetCol</code> in string array <code>tableCols</code>. It will
+     * ignore the case of the tableCols.
      *
      * @param tableCols a string array among which to find the targetCol.
      * @param targetCol the targetCol to find.

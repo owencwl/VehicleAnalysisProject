@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.umxwe.genetedata.entity.VehicleEntity;
 import com.umxwe.genetedata.entity.VehicleTrajectoryEntity;
 import com.umxwe.genetedata.utils.RandomDataUtil;
+
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.api.common.restartstrategy.RestartStrategies;
@@ -51,8 +52,7 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @ClassName FakePlateVehicleByFlink
- * 使用flink读取kafka的数据，按照keyby进行分组，在组内按照时间的先后顺序进行排序（使用watermark的方式对流进行自动排序），然后再计算速度值，将速度值写入es
+ * @ClassName FakePlateVehicleByFlink 使用flink读取kafka的数据，按照keyby进行分组，在组内按照时间的先后顺序进行排序（使用watermark的方式对流进行自动排序），然后再计算速度值，将速度值写入es
  * @Description Todo
  * @Author owen(umxwe)
  * @Date 2021/3/3
@@ -383,16 +383,17 @@ public class FakePlateVehicleByFlink {
         }
 
         /**
-         * Return the distance (in meters) between 2 lat,lon geo points using the haversine method implemented by umxwe
+         * Return the distance (in meters) between 2 lat,lon geo points using the haversine method
+         * implemented by umxwe
          */
         public double arcDistance(double lat1, double lon1, double lat2, double lon2) {
             return UmxSloppyMath.haversinMeters(lat1, lon1, lat2, lon2);
         }
 
         /**
-         * Return the distance (in meters) between 2 lat,lon geo points using a simple tangential plane
-         * this provides a faster alternative to {arcDistance} but is inaccurate for distances greater than
-         * 4 decimal degrees
+         * Return the distance (in meters) between 2 lat,lon geo points using a simple tangential
+         * plane this provides a faster alternative to {arcDistance} but is inaccurate for distances
+         * greater than 4 decimal degrees
          */
         public static double planeDistance(double lat1, double lon1, double lat2, double lon2) {
             /** Earth mean radius defined by WGS 84 in meters */

@@ -8,12 +8,19 @@ package com.umxwe.common.param;
  */
 
 import com.google.gson.Gson;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -23,10 +30,10 @@ import java.util.stream.Stream;
  */
 public class ParamUtil {
 
-    private static Stream <Field> getAllFields(Class cls) {
-        final List <Class> ret = new ArrayList <>();
+    private static Stream<Field> getAllFields(Class cls) {
+        final List<Class> ret = new ArrayList<>();
         ret.add(cls);
-        final Set <Class> hash = new HashSet <>(Collections.singletonList(cls));
+        final Set<Class> hash = new HashSet<>(Collections.singletonList(cls));
         for (int i = 0; i < ret.size(); ++i) {
             Class cur = ret.get(i);
             Optional.ofNullable(cur.getSuperclass()).map(ret::add);
@@ -47,8 +54,8 @@ public class ParamUtil {
      * @param cls the class of operator
      * @return
      */
-    public static List <ParamInfo> getParametersByOperator(Class cls) {
-        Stream <ParamInfo> s = getAllFields(cls)
+    public static List<ParamInfo> getParametersByOperator(Class cls) {
+        Stream<ParamInfo> s = getAllFields(cls)
                 .filter(x -> Modifier.isStatic(x.getModifiers()) && Modifier.isFinal(x.getModifiers()))
                 .filter(x -> ParamInfo.class.isAssignableFrom(x.getType()))
                 .map(x -> {
@@ -98,8 +105,8 @@ public class ParamUtil {
      * @param cls the class of operator
      */
     public static void help(Class cls) {
-        List <String[]> g = getParametersByOperator(cls).stream()
-                .map(x -> new String[] {
+        List<String[]> g = getParametersByOperator(cls).stream()
+                .map(x -> new String[]{
                         x.getName(),
                         x.getDescription(),
                         x.isOptional() ? "optional" : "required",
@@ -107,7 +114,7 @@ public class ParamUtil {
                 })
                 .collect(Collectors.toList());
 
-        final String[] tableHeader = new String[] {"name", "description", "optional", "defaultValue"};
+        final String[] tableHeader = new String[]{"name", "description", "optional", "defaultValue"};
 
         final int[] maxLengthOfCells = IntStream.range(0, tableHeader.length)
                 .map(idx -> Math.max(tableHeader[idx].length(),
@@ -133,7 +140,7 @@ public class ParamUtil {
      * @param <T>         class
      * @return enum
      */
-    public static <T extends Enum <?>> T searchEnum(Class <T> enumeration, String search, String paramName) {
+    public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search, String paramName) {
         return searchEnum(enumeration, search, paramName, null);
     }
 
@@ -145,7 +152,7 @@ public class ParamUtil {
      * @param <T>       class
      * @return enum
      */
-    public static <T extends Enum <?>> T searchEnum(ParamInfo <T> paramInfo, String search) {
+    public static <T extends Enum<?>> T searchEnum(ParamInfo<T> paramInfo, String search) {
         return searchEnum(paramInfo.getValueClass(), search, paramInfo.getName());
     }
 
@@ -159,8 +166,8 @@ public class ParamUtil {
      * @param <T>         class
      * @return enum
      */
-    public static <T extends Enum <?>> T searchEnum(Class <T> enumeration, String search, String paramName,
-                                                    String opName) {
+    public static <T extends Enum<?>> T searchEnum(Class<T> enumeration, String search, String paramName,
+                                                   String opName) {
         if (search == null) {
             return null;
         }

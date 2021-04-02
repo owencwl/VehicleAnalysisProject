@@ -6,6 +6,7 @@ package com.umxwe.common.utils;
  * @Author owen(umxwe))
  * @Date 2020/12/17
  */
+
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
@@ -25,10 +26,10 @@ public class DataStreamConversionUtil {
     /**
      * Convert the given Table to {@link DataStream}<{@link Row}>.
      *
-     * @param table     the Table to convert.
+     * @param table the Table to convert.
      * @return the converted DataStream.
      */
-    public static DataStream <Row> fromTable(StreamExecutionEnvironment env,Table table) {
+    public static DataStream<Row> fromTable(StreamExecutionEnvironment env, Table table) {
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
         return tEnv.toAppendStream(table, Row.class);
     }
@@ -36,14 +37,13 @@ public class DataStreamConversionUtil {
     /**
      * Convert the given DataStream to Table with specified TableSchema.
      *
-     * @param data      the DataStream to convert.
-     * @param schema    the specified TableSchema.
+     * @param data   the DataStream to convert.
+     * @param schema the specified TableSchema.
      * @return the converted Table.
      */
-    public static Table toTable(StreamTableEnvironment stenv , DataStream <Row> data, TableSchema schema) {
-        return toTable(stenv,data, schema.getFieldNames(), schema.getFieldTypes());
+    public static Table toTable(StreamTableEnvironment stenv, DataStream<Row> data, TableSchema schema) {
+        return toTable(stenv, data, schema.getFieldNames(), schema.getFieldTypes());
     }
-
 
 
     /**
@@ -53,7 +53,7 @@ public class DataStreamConversionUtil {
      * @param colNames the specified colNames.
      * @return the converted Table.
      */
-    public static Table toTable(StreamTableEnvironment stenv ,DataStream <Row> data, String[] colNames) {
+    public static Table toTable(StreamTableEnvironment stenv, DataStream<Row> data, String[] colNames) {
         if (null == colNames || colNames.length == 0) {
             return stenv.fromDataStream(data);
         } else {
@@ -71,21 +71,21 @@ public class DataStreamConversionUtil {
      *
      * @param data     the DataStream to convert.
      * @param colNames the specified colNames.
-     * @param colTypes the specified colTypes. This variable is used only when the
-     *                 DataSet is produced by a function and Flink cannot determine
-     *                 automatically what the produced type is.
+     * @param colTypes the specified colTypes. This variable is used only when the DataSet is
+     *                 produced by a function and Flink cannot determine automatically what the
+     *                 produced type is.
      * @return the converted Table.
      */
-    public static Table toTable(StreamTableEnvironment stenv , DataStream <Row> data, String[] colNames, TypeInformation <?>[]
+    public static Table toTable(StreamTableEnvironment stenv, DataStream<Row> data, String[] colNames, TypeInformation<?>[]
             colTypes) {
         try {
-            return toTable(stenv,data, colNames);
+            return toTable(stenv, data, colNames);
         } catch (ValidationException ex) {
             if (null == colTypes) {
                 throw ex;
             } else {
-                DataStream <Row> t = getDataSetWithExplicitTypeDefine(data, colNames, colTypes);
-                return toTable(stenv,t, colNames);
+                DataStream<Row> t = getDataSetWithExplicitTypeDefine(data, colNames, colTypes);
+                return toTable(stenv, t, colNames);
             }
         }
     }
@@ -98,14 +98,14 @@ public class DataStreamConversionUtil {
      * @param colTypes the specified colTypes
      * @return the DataStream with type information hint.
      */
-    private static DataStream <Row> getDataSetWithExplicitTypeDefine(
-            DataStream <Row> data,
+    private static DataStream<Row> getDataSetWithExplicitTypeDefine(
+            DataStream<Row> data,
             String[] colNames,
-            TypeInformation <?>[] colTypes) {
+            TypeInformation<?>[] colTypes) {
 
-        DataStream <Row> r = data
+        DataStream<Row> r = data
                 .map(
-                        new MapFunction <Row, Row>() {
+                        new MapFunction<Row, Row>() {
                             private static final long serialVersionUID = 2265970163148833801L;
 
                             @Override

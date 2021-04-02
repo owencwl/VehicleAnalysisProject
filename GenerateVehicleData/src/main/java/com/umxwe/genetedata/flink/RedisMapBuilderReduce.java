@@ -1,6 +1,7 @@
 package com.umxwe.genetedata.flink;
 
 import com.alibaba.fastjson.JSON;
+
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.slf4j.Logger;

@@ -1,4 +1,3 @@
-
 /**
  * Project Name:flink-es-sink-demo File Name:ESQueryDemo.java Package Name:com.coomia.query
  * Date:2020年9月9日下午5:25:37 Copyright (c) 2020, spancer.ray All Rights Reserved.
@@ -9,6 +8,7 @@ package com.umxwe.analysis;
 import com.umxwe.common.elastic.bitmap.BitmapUtil;
 import com.umxwe.elasticsearchplugin.bitmap.BitmapAggregationBuilder;
 import com.umxwe.elasticsearchplugin.bitmap.ParsedBitmap;
+
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
@@ -21,7 +21,6 @@ import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.roaringbitmap.longlong.LongConsumer;
 import org.roaringbitmap.longlong.Roaring64Bitmap;
 
 import java.io.IOException;

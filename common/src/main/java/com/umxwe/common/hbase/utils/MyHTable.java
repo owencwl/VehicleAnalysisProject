@@ -6,17 +6,39 @@ package com.umxwe.common.hbase.utils;
  * @Author owen(umxwe)
  * @Date 2021/2/5
  */
+
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.*;
-import org.apache.hadoop.hbase.filter.*;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.client.Table;
+import org.apache.hadoop.hbase.filter.BinaryComparator;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.hadoop.hbase.filter.FilterList;
+import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
+import org.apache.hadoop.hbase.filter.QualifierFilter;
+import org.apache.hadoop.hbase.filter.RandomRowFilter;
+import org.apache.hadoop.hbase.filter.RegexStringComparator;
+import org.apache.hadoop.hbase.filter.RowFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class MyHTable<T> {
     MyHBase myHBase;
@@ -218,7 +240,6 @@ public class MyHTable<T> {
     }
 
     /**
-     *
      * @param chance 表示有一定的机会取得部分数据，例如：chance=0.0005，200W总数据*0.0005=1000条左右的数据
      * @param t
      * @return
@@ -247,6 +268,7 @@ public class MyHTable<T> {
 
     /**
      * 多个过滤器
+     *
      * @param chance
      * @param t
      * @return
@@ -264,8 +286,8 @@ public class MyHTable<T> {
 
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
         Filter filter1 = new RandomRowFilter(chance); //
-        Filter filter2 = new QualifierFilter(CompareFilter.CompareOp.EQUAL, new  BinaryComparator(Bytes.toBytes("c8")));//只获取车牌号列
-        filterList.addFilter(Arrays.asList(filter1,filter2));
+        Filter filter2 = new QualifierFilter(CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes("c8")));//只获取车牌号列
+        filterList.addFilter(Arrays.asList(filter1, filter2));
         scan.setFilter(filterList);
 
         scan.addFamily(Bytes.toBytes(MyHBase.DATA_FAMILY));
@@ -287,8 +309,8 @@ public class MyHTable<T> {
         Scan scan = new Scan();
         FilterList filterList = new FilterList(FilterList.Operator.MUST_PASS_ALL);
         Filter filter1 = new RowFilter(CompareFilter.CompareOp.EQUAL, new RegexStringComparator(regexRowkeyStr));
-        Filter filter2 = new QualifierFilter(CompareFilter.CompareOp.EQUAL, new  BinaryComparator(Bytes.toBytes("c8")));//只获取车牌号列
-        filterList.addFilter(Arrays.asList(filter1,filter2));
+        Filter filter2 = new QualifierFilter(CompareFilter.CompareOp.EQUAL, new BinaryComparator(Bytes.toBytes("c8")));//只获取车牌号列
+        filterList.addFilter(Arrays.asList(filter1, filter2));
         scan.setFilter(filterList);
         scan.addFamily(Bytes.toBytes(MyHBase.DATA_FAMILY));
         ResultScanner resultScanner = table.getScanner(scan);
@@ -318,7 +340,6 @@ public class MyHTable<T> {
             throw new IOException("tablePool.getSource failed");
         }
     }
-
 
 
 }

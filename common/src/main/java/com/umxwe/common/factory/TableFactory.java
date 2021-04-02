@@ -1,15 +1,15 @@
 package com.umxwe.common.factory;
 
+import com.umxwe.common.source.SourceConnector;
+
 import org.apache.flink.table.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.umxwe.common.source.SourceConnector;
 
 import java.io.IOException;
 
 /**
- * @ClassName TableFactory
- * 拿到表对象
+ * @ClassName TableFactory 拿到表对象
  * @Description Todo
  * @Author owen(umxwe))
  * @Data 2020/9/18
@@ -28,6 +28,7 @@ public class TableFactory {
 
     /**
      * get an table object
+     *
      * @return
      * @throws IOException
      */

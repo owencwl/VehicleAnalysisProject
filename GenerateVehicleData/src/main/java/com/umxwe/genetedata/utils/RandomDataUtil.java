@@ -6,7 +6,13 @@ import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 /**
  * @ClassName RandomDataUtil
@@ -44,6 +50,7 @@ public class RandomDataUtil {
         List<String> list = Arrays.asList(values);
         return list.get((int) (Math.random() * list.size()));
     }
+
     public static String generateCarID() {
 
         char[] provinceAbbr = { // 省份简称 4+22+5+3
@@ -64,6 +71,7 @@ public class RandomDataUtil {
         }
         return carID;
     }
+
     public static long randomDate(String beginDate, String endDate) {
         Date end = null;
         Date start = null;
@@ -84,6 +92,7 @@ public class RandomDataUtil {
         }
         return new Date().getTime();
     }
+
     private static long random(long begin, long end) {
         long rtn = begin + (long) (Math.random() * (end - begin));
         if (rtn == begin || rtn == end) {
@@ -111,6 +120,7 @@ public class RandomDataUtil {
 
     /**
      * 生成连续的时间数据，默认从指定日期开始，按秒开始递增，也可以按其他的天，时，分等方式进行递增
+     *
      * @param startTime
      * @return
      */

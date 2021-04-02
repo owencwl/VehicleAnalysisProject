@@ -7,7 +7,7 @@ import com.umxwe.common.param.WithParams;
 
 import java.util.HashMap;
 
-public interface HbaseSourceParams <T> extends WithParams<T> {
+public interface HbaseSourceParams<T> extends WithParams<T> {
 
     /**
      * build com.umxwe.common.hbase connect params

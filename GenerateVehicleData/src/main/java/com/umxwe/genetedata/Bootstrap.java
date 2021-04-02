@@ -1,49 +1,42 @@
 package com.umxwe.genetedata;
 
 import com.alibaba.fastjson.JSON;
+import com.umxwe.common.hbase.utils.MyHBase;
+import com.umxwe.common.hbase.utils.MyHTable;
+import com.umxwe.common.utils.TimeUtils;
 import com.umxwe.genetedata.entity.VehicleEntity;
 import com.umxwe.genetedata.entity.VehicleTrajectoryEntity;
 import com.umxwe.genetedata.threadpool.ThreadPoolManager;
 import com.umxwe.genetedata.utils.ConcurrentDataProducerutil;
 import com.umxwe.genetedata.utils.RandomDataUtil;
-import com.umxwe.common.hbase.utils.MyHBase;
-import com.umxwe.common.hbase.utils.MyHTable;
-import org.apache.flink.api.java.ExecutionEnvironment;
+
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
-import org.apache.hadoop.hbase.HColumnDescriptor;
-import org.apache.hadoop.hbase.HTableDescriptor;
-import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Admin;
-import org.apache.hadoop.hbase.client.Put;
-import org.apache.hadoop.hbase.client.Table;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
-import org.elasticsearch.action.bulk.BackoffPolicy;
-import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.*;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeUnit;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.umxwe.common.utils.TimeUtils;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 /**
  * @ClassName Bootstrap
@@ -67,7 +60,6 @@ public class Bootstrap {
 //        generateVehicleDataByFlink();
 
 
-
     }
 
     private static void generateSingleData() throws IOException {
@@ -76,7 +68,7 @@ public class Bootstrap {
 //        myHBase.createMetaTable(null,VehicleEntity.class);//手工进行创建元数据表
         MyHTable myHTable1 = myHBase.getTable(VehicleEntity.class);
 
-        VehicleTrajectoryEntity vehicleTrajectoryEntity=new VehicleTrajectoryEntity();
+        VehicleTrajectoryEntity vehicleTrajectoryEntity = new VehicleTrajectoryEntity();
         vehicleTrajectoryEntity.setRowKey("120210102TYEYRQ800838");
         myHTable.put(vehicleTrajectoryEntity);
     }
@@ -95,14 +87,13 @@ public class Bootstrap {
 //        System.out.println(JSON.toJSONString(results1.size()) + "耗时：" + TimeUtils.timeInterval());
 
         TimeUtils.now();
-        String deviceid="4312000000119000072";
-        String date="20210101";
-        int region=Math.abs((deviceid+date).hashCode())%5;
+        String deviceid = "4312000000119000072";
+        String date = "20210101";
+        int region = Math.abs((deviceid + date).hashCode()) % 5;
 
-        List<VehicleTrajectoryEntity> results2 = myHTable.scanByRegexRow(region+date+"*", VehicleTrajectoryEntity.class);
-        logger.info(region+date+"*" +"##########"+JSON.toJSONString(results2.subList(0,5)));
+        List<VehicleTrajectoryEntity> results2 = myHTable.scanByRegexRow(region + date + "*", VehicleTrajectoryEntity.class);
+        logger.info(region + date + "*" + "##########" + JSON.toJSONString(results2.subList(0, 5)));
         System.out.println(JSON.toJSONString(results2.size()) + "耗时：" + TimeUtils.timeInterval());
-
 
 
     }
@@ -124,16 +115,17 @@ public class Bootstrap {
 
         }
     }
+
     public static void generateVehicleDataByFlink() throws Exception {
         Configuration configuration = new Configuration();
         configuration.setDouble("taskmanager.memory.network.fraction", 0.1);
         configuration.setString("taskmanager.memory.network.min", "1024m");
         configuration.setString("taskmanager.memory.network.max", "1024m");
-        StreamExecutionEnvironment senv = StreamExecutionEnvironment.createLocalEnvironment(4,configuration);
+        StreamExecutionEnvironment senv = StreamExecutionEnvironment.createLocalEnvironment(4, configuration);
         senv.setParallelism(4);
 
-        DataStream<VehicleEntity> producer=senv.addSource(new RichParallelSourceFunction<VehicleEntity>() {
-            private long dpv = 2-000-000;
+        DataStream<VehicleEntity> producer = senv.addSource(new RichParallelSourceFunction<VehicleEntity>() {
+            private long dpv = 2 - 000 - 000;
 
             @Override
             public void run(SourceContext<VehicleEntity> ctx) throws Exception {
@@ -142,9 +134,10 @@ public class Bootstrap {
                     dpv--;
                 }
             }
+
             @Override
             public void cancel() {
-                dpv=0;
+                dpv = 0;
             }
         });
 
@@ -265,14 +258,14 @@ public class Bootstrap {
 //                    String rowkey = RandomDataUtil.stringToMD5(vehicleEntity.getPlateNo()).substring(0, 6) + timestamp + vehicleEntity.getPlateNo().substring(1, 7);
 
 
-                    String date=new SimpleDateFormat("yyyyMMdd").format(vehicleTrajectoryEntity.getShotTime());
-                    int region=Math.abs((vehicleTrajectoryEntity.getDeviceID()+date).hashCode())%5;
+                    String date = new SimpleDateFormat("yyyyMMdd").format(vehicleTrajectoryEntity.getShotTime());
+                    int region = Math.abs((vehicleTrajectoryEntity.getDeviceID() + date).hashCode()) % 5;
 //                    int salt=Math.abs(new Long(vehicleTrajectoryEntity.getShotTime()).hashCode())%1000000;
-                    String salt= RandomDataUtil.stringToMD5(Long.toString(vehicleTrajectoryEntity.getShotTime())).substring(0, 5);
-                    String rowkey =region
-                            +date
-                            +vehicleEntity.getPlateNo().substring(1, 7)
-                            +salt;
+                    String salt = RandomDataUtil.stringToMD5(Long.toString(vehicleTrajectoryEntity.getShotTime())).substring(0, 5);
+                    String rowkey = region
+                            + date
+                            + vehicleEntity.getPlateNo().substring(1, 7)
+                            + salt;
 
                     vehicleTrajectoryEntity.setRowKey(rowkey);
                     vehicleTrajectoryLists.add(vehicleTrajectoryEntity);
@@ -284,7 +277,7 @@ public class Bootstrap {
     }
 
 
-    public static void generateDataToES( List<VehicleTrajectoryEntity> vehicleTrajectoryLists) throws InterruptedException, IOException {
+    public static void generateDataToES(List<VehicleTrajectoryEntity> vehicleTrajectoryLists) throws InterruptedException, IOException {
         List<HttpHost> httpHosts = new ArrayList<>();
         httpHosts.add(new HttpHost("10.116.200.21", 9200, "http"));
         httpHosts.add(new HttpHost("10.116.200.22", 9200, "http"));
@@ -297,22 +290,24 @@ public class Bootstrap {
         RestClientBuilder restClient = RestClient.builder((HttpHost[]) httpHosts.toArray(new HttpHost[httpHosts.size()]));
         //创建高级客户端,传入低级客户端
         RestHighLevelClient restHighLevelClient = new RestHighLevelClient(restClient);
-        createIndex(restHighLevelClient,"vehicletrajectoryentity");
+        createIndex(restHighLevelClient, "vehicletrajectoryentity");
 
-        batchInsert(restHighLevelClient,"vehicletrajectoryentity",vehicleTrajectoryLists);
+        batchInsert(restHighLevelClient, "vehicletrajectoryentity", vehicleTrajectoryLists);
 
     }
-    public static void batchInsert(RestHighLevelClient client, String indexName , List<VehicleTrajectoryEntity> vehicleTrajectoryLists) throws IOException {
+
+    public static void batchInsert(RestHighLevelClient client, String indexName, List<VehicleTrajectoryEntity> vehicleTrajectoryLists) throws IOException {
         // TODO Auto-generated method stub
         BulkRequest request = new BulkRequest();
         for (VehicleTrajectoryEntity item : vehicleTrajectoryLists) {
-            Map<String,Object> m  = item.toMap();
-            IndexRequest indexRequest= new IndexRequest(indexName, indexName, String.valueOf(item.getRowKey())).source(m);
+            Map<String, Object> m = item.toMap();
+            IndexRequest indexRequest = new IndexRequest(indexName, indexName, String.valueOf(item.getRowKey())).source(m);
             request.add(indexRequest);
         }
         client.bulk(request, RequestOptions.DEFAULT);
         System.out.println("批量插入完成");
     }
+
     public static void createIndex(RestHighLevelClient restHighLevelClient, String index) throws IOException {
 
         /**

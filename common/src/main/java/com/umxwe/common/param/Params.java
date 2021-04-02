@@ -6,6 +6,7 @@ package com.umxwe.common.param;
  * @Author owen(umxwe))
  * @Date 2020/12/16
  */
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -31,10 +32,10 @@ public class Params implements Serializable {
                     .serializeSpecialFloatingPointValues()
                     .create();
 
-    private HashMap <String, String> params;
+    private HashMap<String, String> params;
 
     public Params() {
-        this.params = new HashMap <>();
+        this.params = new HashMap<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -59,7 +60,7 @@ public class Params implements Serializable {
     @Override
     public Params clone() {
         Params cloneParams = new Params();
-        cloneParams.params = new HashMap <>(this.params);
+        cloneParams.params = new HashMap<>(this.params);
         return cloneParams;
     }
 
@@ -69,7 +70,7 @@ public class Params implements Serializable {
 
     public Params merge(Params otherParams) {
         if (null != otherParams) {
-            for (Map.Entry <String, String> entry : otherParams.params.entrySet()) {
+            for (Map.Entry<String, String> entry : otherParams.params.entrySet()) {
                 this.params.put(entry.getKey(), entry.getValue());
             }
         }
@@ -98,7 +99,7 @@ public class Params implements Serializable {
         return this;
     }
 
-    public <V> Params set(ParamInfo <V> paramInfo, V value) {
+    public <V> Params set(ParamInfo<V> paramInfo, V value) {
         ParamValidator validator = paramInfo.getValidator();
         if (validator != null) {
             validator.validateThrows(value);
@@ -106,17 +107,17 @@ public class Params implements Serializable {
         return set(paramInfo.getName(), value);
     }
 
-    private <V> Stream <String> getParamNameAndAlias(
-            ParamInfo <V> paramInfo) {
-        Stream <String> paramNames = Stream.of(paramInfo.getName());
+    private <V> Stream<String> getParamNameAndAlias(
+            ParamInfo<V> paramInfo) {
+        Stream<String> paramNames = Stream.of(paramInfo.getName());
         if (null != paramInfo.getAlias() && paramInfo.getAlias().length > 0) {
             paramNames = Stream.concat(paramNames, Arrays.stream(paramInfo.getAlias())).sequential();
         }
         return paramNames;
     }
 
-    public <V> V getValue(ParamInfo <V> paramInfo) {
-        Stream <V> paramValue = getParamNameAndAlias(paramInfo)
+    public <V> V getValue(ParamInfo<V> paramInfo) {
+        Stream<V> paramValue = getParamNameAndAlias(paramInfo)
                 .filter(this::contains)
                 .map(x -> this.get(x, paramInfo.getValueClass()))
                 .limit(1);
@@ -142,7 +143,7 @@ public class Params implements Serializable {
                 }));
     }
 
-    public <V> V get(ParamInfo <V> paramInfo) {
+    public <V> V get(ParamInfo<V> paramInfo) {
         V v = getValue(paramInfo);
         ParamValidator validator = paramInfo.getValidator();
         if (validator != null) {
@@ -151,7 +152,7 @@ public class Params implements Serializable {
         return v;
     }
 
-    public <V> boolean contains(ParamInfo <V> paramInfo) {
+    public <V> boolean contains(ParamInfo<V> paramInfo) {
         return getParamNameAndAlias(paramInfo).anyMatch(this::contains);
     }
 
@@ -175,12 +176,12 @@ public class Params implements Serializable {
         return true;
     }
 
-    public Set <String> listParamNames() {
+    public Set<String> listParamNames() {
         return params.keySet();
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public <T> T get(String paramName, Class <T> classOfT) {
+    public <T> T get(String paramName, Class<T> classOfT) {
         if (classOfT.isEnum()) {
             String value = get(paramName, String.class);
             return (T) ParamUtil.searchEnum((Class) classOfT, value, paramName);
@@ -203,7 +204,7 @@ public class Params implements Serializable {
         }
     }
 
-    public <T> T getOrDefault(String paramName, Class <T> classOfT, Object defaultValue) {
+    public <T> T getOrDefault(String paramName, Class<T> classOfT, Object defaultValue) {
         if (this.params.containsKey(paramName)) {
             return get(paramName, classOfT);
         } else {
@@ -298,7 +299,7 @@ public class Params implements Serializable {
     //    return getOrDefault(paramName, Long[].class, defaultValue);
     //}
 
-    public <V> void remove(ParamInfo <V> info) {
+    public <V> void remove(ParamInfo<V> info) {
         remove(info.getName());
     }
 
